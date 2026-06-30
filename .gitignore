@@ -1,0 +1,21 @@
+# macOS
+.DS_Store
+__MACOSX/
+
+# Datos reales y reportes generados (NUNCA subir — confidencial)
+analyser/
+output/
+*.csv
+*.xlsx
+*.pdf
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+env/
+
+# Editores
+.vscode/
+.idea/

@@ -1,0 +1,2323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meta Ads Diagnostic</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+<style>
+:root {
+  --bg: #F8FAFC;
+  --surface: #FFFFFF;
+  --surface-2: #F1F5F9;
+  --surface-3: #E2E8F0;
+  --border: #E2E8F0;
+  --border-hover: #CBD5E1;
+  --primary: #2563EB;
+  --primary-bg: rgba(37,99,235,.06);
+  --primary-dim: #3B82F6;
+  --positive: #059669;
+  --positive-bg: rgba(5,150,105,.08);
+  --positive-border: rgba(5,150,105,.2);
+  --negative: #DC2626;
+  --negative-bg: rgba(220,38,38,.06);
+  --negative-border: rgba(220,38,38,.2);
+  --warning: #D97706;
+  --warning-bg: rgba(217,119,6,.06);
+  --warning-border: rgba(217,119,6,.2);
+  --orange: #F97316;
+  --orange-bg: rgba(249,115,22,.06);
+  --orange-border: rgba(249,115,22,.2);
+  --muted: #94A3B8;
+  --t1: #0F172A;
+  --t2: #475569;
+  --t3: #94A3B8;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-pill: 100px;
+  /* Multi-color chart palette */
+  --chart-1: #2563EB;
+  --chart-2: #7C3AED;
+  --chart-3: #059669;
+  --chart-4: #D97706;
+  --chart-5: #DC2626;
+  --chart-6: #0891B2;
+  --chart-7: #E11D48;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--t1); font-family:'Inter',system-ui,sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased; }
+.layout { max-width:1400px; margin:0 auto; padding:20px 28px; }
+
+/* HEADER */
+.header { display:flex; justify-content:space-between; align-items:center; padding:12px 0 28px; flex-wrap:wrap; gap:16px; }
+.logo { display:flex; align-items:center; gap:12px; }
+.logo-icon { width:38px; height:38px; background:var(--primary); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; color:#fff; }
+.logo-text { font-size:18px; font-weight:800; letter-spacing:-.3px; color:var(--t1); }
+.logo-sub { font-size:11px; color:var(--t3); font-weight:500; }
+.header-right { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+
+/* CONTROLS */
+select, button { font-family:inherit; }
+.select-casino { background:var(--surface); color:var(--t1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 16px; font-size:13px; font-weight:600; cursor:pointer; appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394A3B8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:36px; }
+.select-casino:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(37,99,235,.1); }
+.currency-badge { background:var(--primary-bg); color:var(--primary); padding:6px 14px; border-radius:var(--radius-pill); font-size:11px; font-weight:700; letter-spacing:1px; }
+.btn-primary { background:var(--primary); color:#fff; border:none; border-radius:var(--radius-sm); padding:10px 24px; font-size:13px; font-weight:700; cursor:pointer; transition:all .2s; }
+.btn-primary:hover { background:#1D4ED8; transform:translateY(-1px); box-shadow:0 4px 12px rgba(37,99,235,.25); }
+.btn-primary:disabled { opacity:.4; cursor:not-allowed; transform:none; box-shadow:none; }
+.btn-secondary { background:var(--surface); color:var(--t2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 20px; font-size:12px; font-weight:600; cursor:pointer; transition:all .2s; display:inline-flex; align-items:center; gap:6px; }
+.btn-secondary:hover { border-color:var(--border-hover); color:var(--t1); background:var(--surface-2); }
+.btn-secondary:disabled { opacity:.4; cursor:not-allowed; }
+
+/* DROP ZONE */
+.drop-zone { border:2px dashed var(--border); border-radius:var(--radius); padding:48px 32px; text-align:center; transition:all .3s; cursor:pointer; margin-bottom:28px; background:var(--surface); }
+.drop-zone:hover, .drop-zone.drag-over { border-color:var(--primary); background:var(--primary-bg); }
+.drop-zone-icon { font-size:40px; margin-bottom:12px; opacity:.5; }
+.drop-zone-title { font-size:15px; font-weight:700; margin-bottom:6px; color:var(--t1); }
+.drop-zone-desc { font-size:12px; color:var(--t3); }
+.drop-zone input[type="file"] { display:none; }
+.files-list { margin-top:16px; display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+.file-chip { background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-pill); padding:6px 14px; font-size:11px; font-weight:600; display:inline-flex; align-items:center; gap:8px; color:var(--t2); }
+.file-chip .remove { cursor:pointer; color:var(--negative); font-weight:800; }
+.file-chip.global { border-color:var(--primary-dim); color:var(--primary); background:var(--primary-bg); }
+.file-chip.campaign { border-color:var(--positive-border); color:var(--positive); background:var(--positive-bg); }
+
+/* TABS */
+.tabs { display:flex; gap:4px; margin-bottom:28px; padding:4px; background:var(--surface-2); border-radius:var(--radius-sm); width:fit-content; flex-wrap:wrap; border:1px solid var(--border); }
+.tab { padding:10px 20px; font-size:13px; font-weight:600; color:var(--t3); cursor:pointer; border-radius:6px; transition:all .25s; user-select:none; white-space:nowrap; }
+.tab:hover { color:var(--t2); background:var(--surface); }
+.tab.active { color:#fff; background:var(--primary); box-shadow:0 1px 3px rgba(37,99,235,.3); }
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+
+/* KPI ROW */
+.kpi-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-bottom:28px; }
+.kpi { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px 22px; }
+.kpi-label { font-size:11px; color:var(--t3); text-transform:uppercase; letter-spacing:1.2px; font-weight:600; margin-bottom:8px; }
+.kpi-value { font-size:22px; font-weight:800; letter-spacing:-.5px; color:var(--t1); }
+.kpi-sub { font-size:12px; color:var(--t3); margin-top:4px; }
+.kpi-hero { background:linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); border-color:#BFDBFE; }
+.kpi-hero .kpi-value { font-size:28px; color:var(--primary); }
+.kpi-hero .kpi-label { color:var(--primary-dim); }
+
+/* BADGES */
+.badge { padding:5px 12px; border-radius:var(--radius-pill); font-size:11px; font-weight:700; display:inline-block; }
+.badge-green { background:var(--positive-bg); color:var(--positive); border:1px solid var(--positive-border); }
+.badge-yellow { background:var(--warning-bg); color:var(--warning); border:1px solid var(--warning-border); }
+.badge-red { background:var(--negative-bg); color:var(--negative); border:1px solid var(--negative-border); }
+.badge-orange { background:var(--orange-bg); color:var(--orange); border:1px solid var(--orange-border); }
+
+/* CARDS */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px; margin-bottom:16px; box-shadow:0 1px 3px rgba(0,0,0,.04); }
+.card-title { font-size:16px; font-weight:700; margin-bottom:4px; color:var(--t1); }
+.card-desc { font-size:12px; color:var(--t3); margin-bottom:20px; }
+.card-header { display:flex; justify-content:space-between; align-items:center; cursor:pointer; }
+.card-header:hover { opacity:.8; }
+.card-toggle { font-size:18px; color:var(--t3); transition:transform .3s; }
+.card-toggle.open { transform:rotate(180deg); }
+.card-body { overflow:hidden; transition:max-height .4s ease; }
+.card-body.collapsed { max-height:0 !important; padding-top:0; padding-bottom:0; }
+
+/* TABLE */
+table { width:100%; border-collapse:collapse; font-size:13px; }
+thead th { font-size:10px; color:var(--t3); text-transform:uppercase; letter-spacing:1.2px; font-weight:600; padding:10px 14px; text-align:left; border-bottom:2px solid var(--border); white-space:nowrap; }
+thead th.r { text-align:right; }
+tbody td { padding:14px; border-bottom:1px solid var(--surface-2); color:var(--t1); }
+tbody td.r { text-align:right; font-variant-numeric:tabular-nums; }
+tbody tr { transition:background .15s; }
+tbody tr:hover { background:var(--surface-2); }
+tbody tr.best-row { background:#F0FDF4; }
+tbody tr.worst-row { background:#FEF2F2; }
+
+/* SEMAPHORE */
+.semaphore { display:inline-flex; align-items:center; gap:6px; }
+.semaphore-dot { width:10px; height:10px; border-radius:50%; }
+.semaphore-dot.red { background:var(--negative); }
+.semaphore-dot.yellow { background:var(--warning); }
+.semaphore-dot.green { background:var(--positive); }
+.semaphore-dot.orange { background:var(--orange); }
+
+/* DETAIL TABLE SCROLL */
+.detail-table-wrap { overflow-x:auto; max-width:100%; }
+.detail-table-wrap table { min-width:1600px; }
+.detail-table-wrap td { font-size:12px; vertical-align:top; }
+.detail-table-wrap td.analysis-cell { font-size:11px; line-height:1.5; color:var(--t2); min-width:200px; max-width:280px; white-space:normal; }
+
+/* STRATEGY TABLE */
+.strategy-table { margin-bottom:24px; }
+.strategy-table td:first-child { font-weight:600; color:var(--t1); white-space:nowrap; width:180px; }
+.strategy-table td:nth-child(2) { color:var(--t2); }
+.strategy-table td:nth-child(3) { color:var(--t1); }
+
+/* DIAGNOSTIC TABLE */
+.diag-table td, .diag-table th { padding:12px 14px; font-size:12px; }
+.diag-table td.state-cell { font-weight:700; }
+
+/* HIGHLIGHT BOX */
+.highlight-box { background:var(--warning-bg); border:1px solid var(--warning-border); border-radius:var(--radius); padding:20px 24px; margin:20px 0; }
+.highlight-box-label { font-size:10px; color:var(--warning); text-transform:uppercase; letter-spacing:2px; font-weight:700; margin-bottom:8px; }
+.highlight-box-text { font-size:13px; color:var(--t2); line-height:1.7; }
+
+/* CREATIVE ANALYSIS */
+.creative-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px; }
+.creative-card { background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px; }
+.creative-icon { font-size:20px; margin-bottom:8px; }
+.creative-campaign { font-size:13px; font-weight:700; margin-bottom:4px; color:var(--t1); }
+.creative-verdict { font-size:12px; color:var(--t2); line-height:1.5; }
+
+/* EXECUTIVE NOTE */
+.exec-note { background:linear-gradient(135deg, #EFF6FF 0%, #F0F9FF 100%); border:1px solid #BFDBFE; border-radius:var(--radius); padding:24px; margin-top:20px; }
+.exec-note-label { font-size:10px; color:var(--primary); text-transform:uppercase; letter-spacing:2px; font-weight:700; margin-bottom:10px; }
+.exec-note-text { font-size:14px; color:var(--t2); line-height:1.7; }
+
+/* RECOMMENDATIONS */
+.rec-number { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; background:var(--primary-bg); color:var(--primary); font-size:12px; font-weight:800; flex-shrink:0; }
+.rec-row { display:flex; gap:14px; align-items:flex-start; padding:16px 0; border-bottom:1px solid var(--surface-2); }
+.rec-row:last-child { border-bottom:none; }
+.rec-content { flex:1; }
+.rec-action { font-size:13px; font-weight:600; margin-bottom:4px; color:var(--t1); }
+.rec-impact { font-size:11px; color:var(--t3); }
+.rec-campaign-tag { display:inline-block; padding:3px 10px; border-radius:var(--radius-pill); font-size:10px; font-weight:700; background:var(--surface-2); color:var(--t2); margin-left:8px; border:1px solid var(--border); }
+
+/* BUDGET TABLE */
+.budget-table td.change-positive { color:var(--positive); }
+.budget-table td.change-negative { color:var(--negative); }
+
+/* CHARTS */
+.charts-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(500px, 1fr)); gap:16px; }
+.chart-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px; box-shadow:0 1px 3px rgba(0,0,0,.04); }
+.chart-card canvas { max-height:350px; }
+.chart-title { font-size:14px; font-weight:700; margin-bottom:16px; color:var(--t1); }
+
+/* HISTORY */
+.history-panel { position:fixed; top:0; right:-420px; width:420px; height:100vh; background:var(--surface); border-left:1px solid var(--border); z-index:100; transition:right .3s ease; overflow-y:auto; padding:28px; box-shadow:-8px 0 30px rgba(0,0,0,.08); }
+.history-panel.open { right:0; }
+.history-overlay { position:fixed; inset:0; background:rgba(15,23,42,.3); z-index:99; display:none; }
+.history-overlay.open { display:block; }
+.history-item { background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px; margin-bottom:10px; cursor:pointer; transition:all .2s; }
+.history-item:hover { border-color:var(--primary-dim); box-shadow:0 2px 8px rgba(37,99,235,.08); }
+.history-casino { font-size:13px; font-weight:700; color:var(--t1); }
+.history-date { font-size:11px; color:var(--t3); margin-top:4px; }
+.history-roas { font-size:11px; margin-top:6px; color:var(--t2); }
+
+/* EMPTY STATE */
+.empty-state { text-align:center; padding:80px 32px; }
+.empty-state-icon { font-size:48px; margin-bottom:16px; opacity:.3; }
+.empty-state-title { font-size:18px; font-weight:700; margin-bottom:8px; color:var(--t1); }
+.empty-state-desc { font-size:13px; color:var(--t3); max-width:400px; margin:0 auto; }
+
+/* LOADING */
+.loading { text-align:center; padding:40px; }
+.spinner { display:inline-block; width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--primary); border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--surface-3); border-radius:3px; }
+
+/* RESPONSIVE */
+@media (max-width:768px) {
+  .layout { padding:12px 16px; }
+  .header { flex-direction:column; align-items:flex-start; }
+  .kpi-row { grid-template-columns:1fr 1fr; }
+  .charts-grid { grid-template-columns:1fr; }
+  .tabs { width:100%; overflow-x:auto; flex-wrap:nowrap; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">M</div>
+      <div>
+        <div class="logo-text">Meta Ads Diagnostic</div>
+        <div class="logo-sub">Diagnóstico de campañas por casino</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <select class="select-casino" id="casinoSelect">
+        <option value="">Seleccionar casino</option>
+        <option value="bmx">Betmexico</option>
+        <option value="bet4-pe">Bet4 Perú</option>
+        <option value="bet4-br">Bet4 Brasil</option>
+        <option value="aposta">Aposta</option>
+        <option value="fazo">Fazo</option>
+        <option value="casinito">Casinito</option>
+      </select>
+      <span class="currency-badge" id="currencyBadge">---</span>
+      <button class="btn-primary" id="analyzeBtn" disabled>Analizar</button>
+      <button class="btn-secondary" id="exportBtn" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        Exportar PDF
+      </button>
+      <button class="btn-secondary" id="clearBtn" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        Limpiar
+      </button>
+      <button class="btn-secondary" id="historyBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Historial
+      </button>
+    </div>
+  </div>
+
+  <!-- DROP ZONE -->
+  <div class="drop-zone" id="dropZone">
+    <div class="drop-zone-icon">&#128203;</div>
+    <div class="drop-zone-title">Arrastra los CSV de Meta Ads aquí</div>
+    <div class="drop-zone-desc">O haz clic para seleccionar. Sube el CSV global (resumen) y uno por cada campaña.</div>
+    <input type="file" id="fileInput" multiple accept=".csv">
+    <div class="files-list" id="filesList"></div>
+  </div>
+
+  <!-- DASHBOARD (hidden until analysis) -->
+  <div id="dashboard" style="display:none">
+    <!-- TABS -->
+    <div class="tabs" id="tabsNav">
+      <div class="tab active" data-tab="summary">Resumen Ejecutivo</div>
+      <div class="tab" data-tab="detail">Detalle por Campaña</div>
+      <div class="tab" data-tab="actions">Acciones y Estrategia</div>
+      <div class="tab" data-tab="charts">Gráficas</div>
+    </div>
+
+    <!-- TAB 1: RESUMEN EJECUTIVO -->
+    <div class="tab-content active" id="tab-summary"></div>
+
+    <!-- TAB 2: DETALLE POR CAMPAÑA -->
+    <div class="tab-content" id="tab-detail"></div>
+
+    <!-- TAB 3: ACCIONES Y ESTRATEGIA -->
+    <div class="tab-content" id="tab-actions"></div>
+
+    <!-- TAB 4: GRÁFICAS -->
+    <div class="tab-content" id="tab-charts"></div>
+  </div>
+
+  <!-- EMPTY STATE -->
+  <div id="emptyState">
+    <div class="empty-state">
+      <div class="empty-state-icon">&#128202;</div>
+      <div class="empty-state-title">Selecciona un casino y sube los CSV</div>
+      <div class="empty-state-desc">El dashboard se generará automáticamente con diagnóstico completo, recomendaciones y gráficas comparativas.</div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY PANEL -->
+<div class="history-overlay" id="historyOverlay"></div>
+<div class="history-panel" id="historyPanel">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+    <h3 style="font-size:16px;font-weight:800;">Historial de análisis</h3>
+    <span style="cursor:pointer;font-size:20px;color:var(--t3);" id="closeHistory">&times;</span>
+  </div>
+  <div id="historyList"></div>
+</div>
+
+<script>
+// ============================================================
+// CONFIGURATION
+// ============================================================
+const CASINOS = {
+  'bmx': { name: 'Betmexico', currency: 'MXN', symbol: '$' },
+  'bet4-pe': { name: 'Bet4 Perú', currency: 'MXN', symbol: '$' },
+  'bet4-br': { name: 'Bet4 Brasil', currency: 'BRL', symbol: 'R$' },
+  'aposta': { name: 'Aposta', currency: 'BRL', symbol: 'R$' },
+  'fazo': { name: 'Fazo', currency: 'BRL', symbol: 'R$' },
+  'casinito': { name: 'Casinito', currency: 'MXN', symbol: '$' }
+};
+
+const THRESHOLDS = {
+  roas: { critical: 1.0, warning: 5.0 },
+  frequency: { warning: 7, alert: 15, emergency: 25 }
+};
+
+// ============================================================
+// STATE
+// ============================================================
+var uploadedFiles = [];
+var currentAnalysis = null;
+var chartInstances = [];
+
+// ============================================================
+// DOM REFS
+// ============================================================
+const $ = id => document.getElementById(id);
+const casinoSelect = $('casinoSelect');
+const currencyBadge = $('currencyBadge');
+const analyzeBtn = $('analyzeBtn');
+const exportBtn = $('exportBtn');
+const dropZone = $('dropZone');
+const fileInput = $('fileInput');
+const filesList = $('filesList');
+const dashboard = $('dashboard');
+const emptyState = $('emptyState');
+const historyBtn = $('historyBtn');
+const historyPanel = $('historyPanel');
+const historyOverlay = $('historyOverlay');
+const closeHistory = $('closeHistory');
+const clearBtn = $('clearBtn');
+
+// ============================================================
+// CSV PARSER
+// ============================================================
+function fixEncoding(text) {
+  // Fix double-encoded UTF-8 (latin1 interpreted as UTF-8)
+  // Use array of pairs to avoid quote escaping issues
+  const replacements = [
+    ["Ã¡", "á"], ["Ã©", "é"], ["Ã\xAD", "í"], ["Ã³", "ó"], ["Ãº", "ú"],
+    ["Ã±", "ñ"], ["Ã¼", "ü"],
+    ["Ã\x81", "Á"], ["Ã\x89", "É"], ["Ã\x8D", "Í"], ["Ã\x93", "Ó"],
+    ["Ã\x9A", "Ú"], ["Ã\x91", "Ñ"], ["Ã\x9C", "Ü"],
+    ["Â¿", "¿"], ["Â¡", "¡"],
+    ["FinalizaciÃ³n", "Finalización"],
+    ["ConfiguraciÃ³n", "Configuración"],
+    ["atribuciÃ³n", "atribución"],
+    ["campaÃ±a", "campaña"],
+    ["CampaÃ±a", "Campaña"],
+    ["inversiÃ³n", "inversión"],
+    ["interacciÃ³n", "interacción"],
+    ["ClasificaciÃ³n", "Clasificación"],
+    ["Ãltimo", "Último"],
+    ["dÃ\xADas", "días"]
+  ];
+  for (const [bad, good] of replacements) {
+    text = text.split(bad).join(good);
+  }
+  return text;
+}
+
+function parseCSV(text) {
+  text = fixEncoding(text);
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) return { headers: [], rows: [] };
+
+  const headers = parseCSVLine(lines[0]);
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const values = parseCSVLine(lines[i]);
+    if (values.length >= headers.length - 1) {
+      const row = {};
+      headers.forEach((h, idx) => { row[h] = values[idx] || ''; });
+      rows.push(row);
+    }
+  }
+  return { headers, rows };
+}
+
+function parseCSVLine(line) {
+  const values = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (i + 1 < line.length && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        current += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ',') {
+        values.push(current.trim());
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+  }
+  values.push(current.trim());
+  return values;
+}
+
+function parseNumber(val) {
+  if (!val || val === '-' || val === '') return 0;
+  val = String(val).replace(/[R$\sMXN$]/g, '');
+  // Handle comma as thousands separator
+  if (val.includes(',') && val.includes('.')) {
+    // 1,234.56 or 1.234,56
+    const lastComma = val.lastIndexOf(',');
+    const lastDot = val.lastIndexOf('.');
+    if (lastComma > lastDot) {
+      // European format: 1.234,56
+      val = val.replace(/\./g, '').replace(',', '.');
+    } else {
+      // US format: 1,234.56
+      val = val.replace(/,/g, '');
+    }
+  } else if (val.includes(',') && !val.includes('.')) {
+    // Could be "1,234" (thousands) or "1,5" (decimal)
+    const parts = val.split(',');
+    if (parts.length === 2 && parts[1].length <= 2) {
+      val = val.replace(',', '.'); // decimal
+    } else {
+      val = val.replace(/,/g, ''); // thousands
+    }
+  }
+  const num = parseFloat(val);
+  return isNaN(num) ? 0 : num;
+}
+
+// ============================================================
+// CSV TYPE DETECTION
+// ============================================================
+function detectCSVType(headers) {
+  const joined = headers.join('|').toLowerCase();
+  if (joined.includes('nombre del conjunto de anuncios') || joined.includes('nombre del anuncio')) {
+    if (joined.includes('nombre de la campaña') || joined.includes('nombre de la campana')) {
+      return 'global';
+    }
+    return 'campaign';
+  }
+  if (joined.includes('nombre de la campaña') || joined.includes('nombre de la campana')) {
+    return 'global';
+  }
+  // Fallback: if has Puja/Clasificación columns → campaign
+  if (joined.includes('puja') || joined.includes('clasificación') || joined.includes('clasificacion')) {
+    return 'campaign';
+  }
+  return 'global';
+}
+
+function findColumn(headers, ...keywords) {
+  // Try exact start match first (preferred)
+  const exact = headers.find(h => {
+    const hl = h.toLowerCase();
+    return keywords.some(k => hl.startsWith(k.toLowerCase()));
+  });
+  if (exact) return exact;
+  // Fallback to includes
+  return headers.find(h => {
+    const hl = h.toLowerCase();
+    return keywords.some(k => hl.includes(k.toLowerCase()));
+  }) || null;
+}
+
+// ============================================================
+// ANALYSIS ENGINE
+// ============================================================
+function detectCampaignType(name) {
+  const n = name.toLowerCase();
+  if (n.includes('all') && !n.includes('retener') && !n.includes('retarget') && !n.includes('reactiv') && !n.includes('revivir')) return 'acquisition';
+  if (n.includes('retener') || n.includes('retarget')) return 'retention';
+  if (n.includes('reactivar') || n.includes('revivir')) return 'reactivation';
+  return 'other';
+}
+
+function getCampaignTypeLabel(type) {
+  const labels = { acquisition: 'Adquisición', retention: 'Retención', reactivation: 'Reactivación', other: 'Otro' };
+  return labels[type] || 'Otro';
+}
+
+function getSemaphore(roas) {
+  if (roas < THRESHOLDS.roas.critical) return 'red';
+  if (roas < THRESHOLDS.roas.warning) return 'yellow';
+  return 'green';
+}
+
+function getSemaphoreLabel(color) {
+  const labels = { red: 'Crítico', yellow: 'Atención', green: 'Saludable' };
+  return labels[color] || '';
+}
+
+// 4-level ad semaphore
+function getAdSemaphore(ad, campaignType) {
+  const classificationBad = ad.classification && ad.classification.toLowerCase().includes('debajo');
+  const roas = ad.roas;
+  const freq = ad.frequency;
+  const spend = ad.spend;
+  const results = ad.results;
+
+  // PAUSAR YA
+  if (classificationBad && roas < 1.0) return 'pause_now';
+  if (spend > 0 && results <= 0) return 'pause_now';
+  if (roas < 0.3 && spend > 1000) return 'pause_now';
+
+  // PAUSAR
+  if (roas < 1.0 && spend > 500) return 'pause';
+  if (roas < 0.7) return 'pause';
+
+  // MONITOREAR
+  if (roas >= 1.0 && roas < 5.0) return 'monitor';
+  if (freq > 7) return 'monitor';
+  if (roas >= 5.0 && freq > 5) return 'monitor';
+
+  // ÓPTIMO
+  return 'optimal';
+}
+
+function getAdSemaphoreLabel(sem) {
+  return { optimal: 'Óptimo', monitor: 'Monitorear', pause: 'Pausar', pause_now: 'PAUSAR YA' }[sem] || '';
+}
+
+function getAdSemaphoreColor(sem) {
+  return { optimal: 'green', monitor: 'yellow', pause: 'orange', pause_now: 'red' }[sem] || '';
+}
+
+function getAdSemaphoreCSSVar(sem) {
+  return { optimal: 'positive', monitor: 'warning', pause: 'orange', pause_now: 'negative' }[sem] || 't1';
+}
+
+function getAdSemaphoreBadgeClass(sem) {
+  return { optimal: 'badge-green', monitor: 'badge-yellow', pause: 'badge-orange', pause_now: 'badge-red' }[sem] || '';
+}
+
+// Root cause analysis per ad
+function analyzeAdProblem(ad, campaign) {
+  const sem = getAdSemaphore(ad, campaign.type);
+  const classificationBad = ad.classification && ad.classification.toLowerCase().includes('debajo');
+  const highFreq = ad.frequency > 7;
+  const highCpm = ad.cpm > 30;
+  const isRegistration = campaign.indicator && campaign.indicator.toLowerCase().includes('registration');
+  const metricLabel = isRegistration ? 'registro' : 'compra';
+  const sym = CASINOS[currentAnalysis?.casino]?.symbol || '$';
+
+  // Determine if this ad is the benchmark (best ROAS with spend > 0)
+  let isBenchmark = false;
+  if (campaign.ads && campaign.ads.length > 1) {
+    const activeAds = campaign.ads.filter(a => a.spend > 0);
+    if (activeAds.length > 0) {
+      const bestAd = activeAds.reduce((best, a) => a.roas > best.roas ? a : best, activeAds[0]);
+      isBenchmark = bestAd.name === ad.name;
+    }
+  }
+
+  // Calculate campaign CPM average for comparison
+  let campaignAvgCpm = 0;
+  let cpmComparison = '';
+  if (campaign.ads && campaign.ads.length > 1) {
+    const activeAds = campaign.ads.filter(a => a.spend > 0 && a.cpm > 0);
+    if (activeAds.length > 0) {
+      campaignAvgCpm = activeAds.reduce((s, a) => s + a.cpm, 0) / activeAds.length;
+      if (ad.cpm > 0 && campaignAvgCpm > 0) {
+        const cpmDiff = ((ad.cpm - campaignAvgCpm) / campaignAvgCpm) * 100;
+        if (cpmDiff > 30) {
+          cpmComparison = ' CPM de ' + sym + ad.cpm.toFixed(0) + ' — ' + cpmDiff.toFixed(0) + '% por encima del promedio de campaña (' + sym + campaignAvgCpm.toFixed(0) + ').';
+        }
+      }
+    }
+  }
+
+  // Detect potential audience overlap (similar spend, different ROAS)
+  let overlapSuggestion = '';
+  if (campaign.ads && campaign.ads.length > 1) {
+    const activeAds = campaign.ads.filter(a => a.spend > 0 && a.name !== ad.name);
+    for (const other of activeAds) {
+      const spendRatio = Math.min(ad.spend, other.spend) / Math.max(ad.spend, other.spend);
+      const roasDiff = Math.abs(ad.roas - other.roas);
+      if (spendRatio > 0.5 && roasDiff > 2.0) {
+        overlapSuggestion = ' Revisar si la audiencia se solapa con "' + other.name.substring(0, 30) + '".';
+        break;
+      }
+    }
+  }
+
+  // Campaign-type specific vocabulary
+  const typeVocab = {
+    acquisition: { action: 'registro', plural: 'registros', funnel: 'embudo post-registro', context: 'nuevos usuarios' },
+    retention: { action: 'compra', plural: 'compras', funnel: 'depósito recurrente', context: 'usuario activo y lealtad' },
+    reactivation: { action: 'reactivación', plural: 'reactivaciones', funnel: 'incentivo a volver', context: 'usuario inactivo con urgencia/scarcity' }
+  };
+  const vocab = typeVocab[campaign.type] || typeVocab.acquisition;
+
+  // Check for inactive ads
+  if (ad.spend <= 0 && ad.results <= 0) {
+    return {
+      problem: 'Anuncio inactivo — sin gasto ni resultados en el período analizado.',
+      configFix: 'Verificar con Pablo si se puede eliminar para mantener la cuenta ordenada.',
+      creativeFix: 'No aplica — anuncio inactivo.',
+      isInactive: true
+    };
+  }
+
+  let problem = '', configFix = '', creativeFix = '';
+  const bidText = ad.bid ? ' Mantener puja ' + sym + ad.bid.toFixed(0) + ' y monitorear frecuencia semanalmente.' : ' Monitorear frecuencia semanalmente.';
+
+  if (sem === 'optimal') {
+    problem = 'Sin problemas. ROAS ' + ad.roas.toFixed(1) + 'x, costo bajo, frecuencia controlada.' + cpmComparison;
+    if (isBenchmark) {
+      problem += ' Este creativo es el benchmark. Usar como referencia al crear variaciones.';
+      configFix = 'Ninguno por ahora.' + bidText;
+      creativeFix = 'Este creativo es el benchmark de ' + getCampaignTypeLabel(campaign.type) + '. Preparar variación visual para cuando frecuencia llegue a 7-8.';
+    } else {
+      configFix = 'Ninguno por ahora.' + bidText;
+      creativeFix = 'Renovar creativo cada 3-4 semanas para mantener relevancia. Probar variación de formato: si es estático, testear carrusel o video corto.';
+    }
+  }
+  else if (sem === 'pause_now') {
+    if (classificationBad) {
+      problem = 'Clasificación oficial de Meta: "Por debajo del promedio — 35% de los anuncios menos relevantes".' + (ad.results <= 20 ? ' Solo ' + ad.results + ' ' + vocab.plural + ' en todo el período.' : '') + ' Meta ya lo penalizó y reactivarlo no borra ese historial negativo.' + cpmComparison;
+      configFix = 'Pausar inmediatamente. No reactivar el mismo anuncio — Meta ya lo penalizó.';
+      creativeFix = 'Crear anuncio completamente nuevo: diferente imagen, diferente copy, diferente propuesta de valor. No reutilizar ningún elemento del actual.';
+    } else if (ad.results <= 0 && ad.spend > 0) {
+      problem = 'Gasto de ' + sym + formatNum(ad.spend) + ' sin resultados. El anuncio no está generando ' + vocab.plural + '.' + cpmComparison + overlapSuggestion;
+      configFix = 'Pausar. Revisar si la audiencia y el objetivo están configurados correctamente para ' + vocab.context + '.';
+      creativeFix = 'No invertir en creativos nuevos hasta resolver la configuración. Preparar variación del creativo actual para tener lista en 2-3 semanas.';
+    } else {
+      problem = 'ROAS de ' + ad.roas.toFixed(2) + 'x extremadamente bajo con gasto de ' + sym + formatNum(ad.spend) + '. Pérdida neta significativa.' + cpmComparison + overlapSuggestion;
+      configFix = 'Pausar inmediatamente. Revisar segmentación y objetivo de campaña orientado a ' + vocab.context + '.';
+      creativeFix = 'No renovar — el problema es estructural, no creativo.';
+    }
+  }
+  else if (sem === 'pause') {
+    if (ad.roas < 1.0 && ad.frequency < 3) {
+      problem = 'Costo por ' + vocab.action + (ad.costPerResult > 0 ? ' de ' + sym + ad.costPerResult.toFixed(0) : ' alto') + '. Frecuencia baja (' + ad.frequency.toFixed(1) + ') — Meta casi no lo está distribuyendo, señal de baja relevancia.' + cpmComparison + overlapSuggestion;
+      configFix = 'Pausar. Verificar si la audiencia de este conjunto es diferenciada. Si es la misma que otros anuncios, no tiene sentido tener ' + (campaign.ads ? campaign.ads.length : '') + ' anuncios compitiendo por ' + vocab.context + '.';
+      creativeFix = 'No renovar mientras esté pausado. Si se decide reactivar con audiencia diferenciada, crear creativo nuevo desde cero enfocado en ' + vocab.context + '.';
+    } else {
+      problem = 'Gasto alto con ROAS de ' + ad.roas.toFixed(2) + 'x.' + (ad.cpm > 0 ? ' CPM de ' + sym + ad.cpm.toFixed(0) + '.' : '') + ' Genera ' + vocab.plural + ' pero a un costo desproporcionado.' + cpmComparison + overlapSuggestion;
+      configFix = 'Revisar objetivo del conjunto: si está optimizando para ' + vocab.action + ' pero la audiencia no convierte después, el problema es el ' + vocab.funnel + '.';
+      creativeFix = 'El creativo puede estar atrayendo clics sin intención real. Probar un arte que filtre mejor: mostrar requisitos o enfatizar el proceso real. Probar variación de formato: si es estático, testear carrusel o video corto.';
+    }
+  }
+  else { // monitor
+    if (highFreq) {
+      problem = 'ROAS aceptable (' + ad.roas.toFixed(1) + 'x) pero frecuencia de ' + ad.frequency.toFixed(1) + ' indica saturación próxima. El rendimiento puede caer pronto.' + cpmComparison;
+      configFix = 'Revisar si la audiencia puede ampliarse ligeramente sin perder calidad. Una audiencia más grande bajaría el CPM.' + overlapSuggestion;
+      creativeFix = 'Priorizar renovación de este creativo. Preparar variación del creativo actual para tener lista en 2-3 semanas. Mantener el mismo mensaje y propuesta de valor — solo cambiar la ejecución visual.';
+    } else if (highCpm) {
+      problem = 'CPM alto (' + sym + ad.cpm.toFixed(0) + '). Audiencia pequeña y cara — Meta paga más por impresión porque el segmento es estrecho.' + cpmComparison;
+      configFix = 'Pedir a Pablo que revise si la audiencia puede ampliarse para ' + vocab.context + '. No hay clasificación negativa.' + overlapSuggestion;
+      creativeFix = 'El creativo actual convierte bien a pesar del CPM alto. Mantener mismo mensaje, solo cambiar ejecución visual para mayor relevancia.';
+    } else {
+      problem = 'Mayor volumen de ' + vocab.plural + ' pero ROAS de ' + ad.roas.toFixed(2) + 'x. El creativo puede no estar comunicando bien el valor del producto.' + cpmComparison + overlapSuggestion;
+      configFix = 'Revisar si la audiencia de este conjunto se solapa con otros. Si hay solapamiento, Meta los pone a competir entre sí elevando el CPM.';
+      if (isBenchmark) {
+        creativeFix = 'Usar como referencia al crear variaciones. Preparar copia visual para cuando llegue a frecuencia 8.';
+      } else {
+        creativeFix = 'Cambiar el enfoque visual. Probar un ángulo diferente (ej. variedad de juegos, facilidad, bono). El objetivo es que los distintos anuncios compitan por distintos perfiles de ' + vocab.context + '.';
+      }
+    }
+  }
+
+  return { problem, configFix, creativeFix, isBenchmark };
+}
+
+// Campaign diagnostic
+function analyzeCampaignDiagnostic(campaign) {
+  const roas = campaign.roas;
+  const freq = campaign.frequency;
+  const sym = CASINOS[currentAnalysis?.casino]?.symbol || '$';
+  const isRegistration = campaign.indicator && campaign.indicator.toLowerCase().includes('registration');
+  const metricLabel = isRegistration ? 'registro' : 'compra';
+
+  // Find best and worst ads
+  let bestWorstInfo = '';
+  if (campaign.ads && campaign.ads.length > 1) {
+    const activeAds = campaign.ads.filter(a => a.spend > 0);
+    if (activeAds.length > 1) {
+      const sorted = [...activeAds].sort((a, b) => b.roas - a.roas);
+      const best = sorted[0];
+      const worst = sorted[sorted.length - 1];
+      bestWorstInfo = ' Mejor anuncio: "' + best.name.substring(0, 30) + '" (ROAS ' + best.roas.toFixed(1) + 'x). Peor: "' + worst.name.substring(0, 30) + '" (ROAS ' + worst.roas.toFixed(1) + 'x).';
+    }
+  }
+
+  if (roas < 1.0) {
+    return {
+      state: 'Crítica',
+      stateColor: 'red',
+      mainProblem: 'ROAS de ' + roas.toFixed(2) + 'x: gasta más de lo que genera. Costo por ' + metricLabel + ' de ' + sym + ' ' + campaign.costPerResult.toFixed(0) + ' es altísimo para casino.',
+      immediateAction: 'Pausar anuncios con peor rendimiento y concentrar presupuesto en los mejores.' + bestWorstInfo
+    };
+  }
+  if (roas < 5.0) {
+    return {
+      state: 'Atención',
+      stateColor: 'yellow',
+      mainProblem: 'ROAS de ' + roas.toFixed(2) + 'x: rentable pero con margen reducido. ' + (freq > 7 ? 'Frecuencia de ' + freq.toFixed(1) + ' indica saturación próxima.' : 'Hay espacio para optimizar.'),
+      immediateAction: 'Optimizar distribución de presupuesto entre anuncios.' + bestWorstInfo
+    };
+  }
+  if (freq > 7) {
+    return {
+      state: 'Saludable (vigilar)',
+      stateColor: 'green',
+      mainProblem: 'ROAS excelente (' + roas.toFixed(1) + 'x) pero frecuencia de ' + freq.toFixed(1) + ' indica que la audiencia se está saturando.',
+      immediateAction: 'Renovar creativos para mantener rendimiento. Considerar ampliar audiencia ligeramente.' + bestWorstInfo
+    };
+  }
+  return {
+    state: 'Saludable',
+    stateColor: 'green',
+    mainProblem: 'Sin problemas. ROAS de ' + roas.toFixed(1) + 'x con frecuencia controlada.',
+    immediateAction: 'Mantener activo. Monitorear semanalmente y renovar creativos cada 3-4 semanas.' + bestWorstInfo
+  };
+}
+
+// Campaign strategy generation
+function generateCampaignStrategy(campaign) {
+  const roas = campaign.roas;
+  const freq = campaign.frequency;
+  const sem = getSemaphore(roas);
+  const isRegistration = campaign.indicator && campaign.indicator.toLowerCase().includes('registration');
+  const metricLabel = isRegistration ? 'registros' : 'compras';
+  const typeLabel = getCampaignTypeLabel(campaign.type);
+
+  const strategy = [];
+
+  // Objetivo actual
+  strategy.push({
+    aspect: 'Objetivo actual',
+    situation: typeLabel + ' — optimizando para ' + metricLabel + '. ' + campaign.results + ' ' + metricLabel + ' en el período.',
+    recommendation: campaign.type === 'acquisition' ? 'Evaluar si el volumen de registros se traduce en depósitos. Si no, considerar cambiar a optimización por compra.' : 'Mantener objetivo de ' + metricLabel + '. Revisar embudo post-conversión.'
+  });
+
+  // Problema / Fortaleza
+  if (sem === 'red') {
+    strategy.push({
+      aspect: 'Problema detectado',
+      situation: 'ROAS negativo (' + roas.toFixed(2) + 'x). Se pierde dinero con cada ' + (isRegistration ? 'registro' : 'compra') + '.',
+      recommendation: 'Revisar segmentación, audiencia y creativos. Pausar anuncios con peor rendimiento. No basta cambiar imágenes si la audiencia está mal definida.'
+    });
+  } else if (sem === 'yellow') {
+    strategy.push({
+      aspect: 'Área de mejora',
+      situation: 'ROAS aceptable (' + roas.toFixed(2) + 'x) pero con margen de optimización.',
+      recommendation: 'Identificar qué anuncios jalan el promedio hacia abajo y pausarlos. Concentrar presupuesto en los de mejor rendimiento.'
+    });
+  } else {
+    strategy.push({
+      aspect: 'Fortaleza',
+      situation: 'ROAS saludable (' + roas.toFixed(1) + 'x). La campaña genera valor neto positivo.',
+      recommendation: 'Proteger esta campaña. No hacer cambios drásticos. Renovar creativos por ciclo natural (cada 3-4 semanas).'
+    });
+  }
+
+  // Creativos
+  const badAds = campaign.ads ? campaign.ads.filter(a => a.classification && a.classification.toLowerCase().includes('debajo')) : [];
+  strategy.push({
+    aspect: 'Creativos (imágenes)',
+    situation: campaign.ads ? campaign.ads.length + ' anuncios activos. ' + (badAds.length > 0 ? badAds.length + ' con clasificación "por debajo del promedio".' : 'Sin penalizaciones de Meta.') + (freq > 7 ? ' Frecuencia de ' + freq.toFixed(1) + ' indica saturación visual.' : '') : 'Sin datos de anuncios individuales.',
+    recommendation: freq > 7 ? 'Renovación urgente de creativos. Cambiar propuesta visual pero mantener mensaje que funciona.' : (badAds.length > 0 ? 'Crear anuncios nuevos para reemplazar los penalizados. No reutilizar elementos de anuncios con clasificación baja.' : 'Mantener creativos actuales. Preparar renovación para las próximas 2-3 semanas.')
+  });
+
+  // Segmentación inferida
+  strategy.push({
+    aspect: 'Segmentación inferida',
+    situation: campaign.cpm > 30 ? 'CPM alto (' + campaign.cpm.toFixed(0) + ') indica audiencia estrecha o muy competida.' : 'CPM dentro de rango normal (' + campaign.cpm.toFixed(0) + ').',
+    recommendation: campaign.cpm > 30 ? 'Considerar ampliar audiencia. Un segmento muy estrecho eleva costos por impresión.' : 'Segmentación parece adecuada. Verificar que no haya solapamiento con otras campañas.'
+  });
+
+  // Mensaje recomendado
+  strategy.push({
+    aspect: 'Mensaje recomendado',
+    situation: campaign.type === 'acquisition' ? 'Adquisición: el mensaje debe generar interés en usuarios nuevos.' : (campaign.type === 'retention' ? 'Retención: el mensaje debe motivar la recurrencia.' : 'Reactivación: el mensaje debe reenganchar a usuarios inactivos.'),
+    recommendation: campaign.type === 'acquisition' ? 'Enfatizar bono de bienvenida, variedad de juegos, facilidad de registro. Diferentes ángulos por anuncio.' : (campaign.type === 'retention' ? 'Mostrar novedades, promociones exclusivas, logros del jugador. Crear sentido de pertenencia.' : 'Oferta especial de regreso, "te extrañamos", bono de reactivación. Urgencia moderada.')
+  });
+
+  // KPI a monitorear — with numeric targets based on data
+  const sym2 = CASINOS[currentAnalysis?.casino]?.symbol || '$';
+  let kpiRec = '';
+  if (campaign.type === 'acquisition') {
+    if (sem === 'red') {
+      const targetLow = (campaign.costPerResult * 0.4).toFixed(0);
+      const targetHigh = (campaign.costPerResult * 0.5).toFixed(0);
+      kpiRec = 'Meta: bajar de ' + sym2 + campaign.costPerResult.toFixed(0) + ' a ' + sym2 + targetLow + '-' + sym2 + targetHigh + ' por ' + (isRegistration ? 'registro' : 'compra') + '. Prioridad: subir ROAS arriba de 1.0x.';
+    } else {
+      kpiRec = 'Mantener ROAS arriba de ' + (sem === 'green' ? '5.0' : '1.0') + 'x. Vigilar frecuencia (alerta si supera 7-8).';
+      if (campaign.ads && campaign.ads.length > 0) {
+        const bestAd = [...campaign.ads].filter(a => a.spend > 0).sort((a, b) => b.roas - a.roas)[0];
+        if (bestAd) kpiRec += ' Referencia: mejor anuncio logra costo de ' + sym2 + bestAd.costPerResult.toFixed(0) + ' por ' + (isRegistration ? 'registro' : 'compra') + '.';
+      }
+    }
+  } else if (campaign.type === 'retention') {
+    kpiRec = 'Alerta si frecuencia >10 o ROAS baja de 20x.';
+    if (campaign.ads && campaign.ads.length > 0) {
+      const bestAd = [...campaign.ads].filter(a => a.spend > 0).sort((a, b) => b.roas - a.roas)[0];
+      if (bestAd) kpiRec += ' Mantener costo por compra cerca de ' + sym2 + bestAd.costPerResult.toFixed(0) + '.';
+    }
+    kpiRec += ' Vigilar frecuencia (alerta si supera 7-8).';
+  } else if (campaign.type === 'reactivation') {
+    const targetCost = campaign.costPerResult > 0 ? Math.min(campaign.costPerResult * 0.7, 10).toFixed(0) : '10';
+    kpiRec = 'Meta: mantener costo <' + sym2 + targetCost + ' por compra reactivada. Vigilar frecuencia (alerta si supera 7-8).';
+  } else {
+    kpiRec = sem === 'red' ? 'Prioridad: subir ROAS arriba de 1.0x.' : 'Mantener ROAS arriba de ' + (sem === 'green' ? '5.0' : '1.0') + 'x. Vigilar frecuencia (alerta si supera 7-8).';
+  }
+
+  strategy.push({
+    aspect: 'KPI a monitorear',
+    situation: 'ROAS actual: ' + roas.toFixed(2) + 'x. Frecuencia: ' + freq.toFixed(1) + '. CPM: ' + campaign.cpm.toFixed(0) + '. Costo/' + (isRegistration ? 'registro' : 'compra') + ': ' + sym2 + campaign.costPerResult.toFixed(0) + '.',
+    recommendation: kpiRec
+  });
+
+  return strategy;
+}
+
+function getFrequencyLevel(freq) {
+  if (freq > THRESHOLDS.frequency.emergency) return { level: 'emergency', label: 'Emergencia', color: 'red' };
+  if (freq > THRESHOLDS.frequency.alert) return { level: 'alert', label: 'Alerta', color: 'red' };
+  if (freq > THRESHOLDS.frequency.warning) return { level: 'warning', label: 'Fatiga creativa', color: 'yellow' };
+  return { level: 'ok', label: 'Normal', color: 'green' };
+}
+
+function analyzeCreativeNeed(campaign) {
+  const roas = campaign.roas;
+  const freq = campaign.frequency;
+  const roasBad = roas < THRESHOLDS.roas.critical;
+  const freqHigh = freq > THRESHOLDS.frequency.warning;
+
+  if (roasBad && freqHigh) return { icon: '❌', verdict: 'NO — Problema estructural. Cambiar creativos no resolverá ROAS negativo con fatiga de audiencia.' };
+  if (roasBad && !freqHigh) return { icon: '❌', verdict: 'NO — ROAS negativo indica problema de segmentación u oferta, no solo creativos.' };
+  if (!roasBad && freqHigh) return { icon: '✅', verdict: 'SÍ — La estructura funciona. Renovar creativos para evitar fatiga de audiencia.' };
+  if (roas < THRESHOLDS.roas.warning && freqHigh) return { icon: '⚠️', verdict: 'PARCIALMENTE — Hay anuncios que deben pausarse por estructura. En los que funcionan, sí ayuda renovar.' };
+  return { icon: '✅', verdict: 'SÍ, por ahora — La campaña rinde bien. Renovar periódicamente para mantener rendimiento.' };
+}
+
+function generateRecommendations(campaigns) {
+  const recs = [];
+  const sym = CASINOS[currentAnalysis?.casino]?.symbol || '$';
+
+  // Track total savings from pause recommendations for scaling suggestions
+  let totalFreedBudget = 0;
+  const pausedAdNames = [];
+
+  for (const c of campaigns) {
+    if (!c.delivery.toLowerCase().includes('activ')) continue;
+    const isRegistration = c.indicator && c.indicator.toLowerCase().includes('registration');
+    const metricLabel = isRegistration ? 'registro' : 'compra';
+
+    // Pause campaigns with very bad ROAS
+    if (c.roas < 0.5 && c.spend > 0) {
+      totalFreedBudget += c.spend;
+      recs.push({ priority: 1, action: 'Pausar campaña "' + c.name + '" — ROAS de ' + c.roas.toFixed(2) + 'x con gasto de ' + sym + ' ' + formatNum(c.spend), campaign: c.name, impact: 'Ahorro inmediato de ~' + sym + ' ' + formatNum(c.spend) + ' redirigible a campañas rentables', responsible: 'Pablo (decisión estratégica)' });
+    }
+
+    // Flag low ROAS campaigns
+    if (c.roas >= 0.5 && c.roas < 1.0 && c.spend > 0) {
+      recs.push({ priority: 2, action: 'Reestructurar "' + c.name + '" — ROAS ' + c.roas.toFixed(2) + 'x. Costo por ' + metricLabel + ' de ' + sym + ' ' + c.costPerResult.toFixed(0) + ' es insostenible', campaign: c.name, impact: 'Reducir costo por ' + metricLabel + ' un 40-60% reestructurando audiencia y creativos', responsible: 'Pablo (estrategia) + Abraham (diseño)' });
+    }
+
+    // High frequency
+    if (c.frequency > THRESHOLDS.frequency.alert) {
+      recs.push({ priority: 2, action: 'Renovar creativos URGENTE en "' + c.name + '" — frecuencia ' + c.frequency.toFixed(1) + ' (audiencia vio el anuncio ' + Math.round(c.frequency) + ' veces en promedio)', campaign: c.name, impact: 'Evitar caída de ROAS por fatiga visual. Sin renovación, ROAS caerá en 1-2 semanas', responsible: 'Abraham (diseño)' });
+    } else if (c.frequency > THRESHOLDS.frequency.warning) {
+      recs.push({ priority: 3, action: 'Preparar creativos nuevos para "' + c.name + '" — frecuencia ' + c.frequency.toFixed(1) + ' indica fatiga próxima', campaign: c.name, impact: 'Proteger ROAS actual de ' + c.roas.toFixed(1) + 'x. Tener creativos listos antes de que baje el rendimiento', responsible: 'Abraham (diseño)' });
+    }
+
+    // Bad ads within campaigns
+    if (c.ads && c.ads.length > 1) {
+      const sorted = [...c.ads].filter(a => a.spend > 0).sort((a, b) => a.roas - b.roas);
+      const adsToPause = [];
+      for (const ad of sorted.slice(0, 2)) {
+        if (ad.roas < 1.0 && ad.spend > 0) {
+          const adSem = getAdSemaphore(ad, c.type);
+          if (adSem === 'pause_now' || adSem === 'pause') {
+            const classificationBad = ad.classification && ad.classification.toLowerCase().includes('debajo');
+            adsToPause.push(ad);
+            totalFreedBudget += ad.spend;
+            pausedAdNames.push(ad.name.substring(0, 30));
+            recs.push({ priority: adSem === 'pause_now' ? 1 : 2, action: 'Pausar anuncio "' + ad.name.substring(0, 40) + '" en "' + c.name + '"' + (classificationBad ? ' — Meta lo clasificó por debajo del promedio' : ' — ROAS de ' + ad.roas.toFixed(2) + 'x'), campaign: c.name, impact: 'Ahorro inmediato de ~' + sym + ' ' + formatNum(ad.spend) + '. Redirigir a anuncios con mejor rendimiento', responsible: 'Abraham' });
+          }
+        }
+      }
+
+      // Boost best ad — include freed budget info
+      const best = sorted[sorted.length - 1];
+      if (best && best.roas > 5) {
+        const freedFromThisCampaign = adsToPause.reduce((s, a) => s + a.spend, 0);
+        let boostImpact = 'Si se le asigna más presupuesto, puede escalar resultados manteniendo eficiencia.';
+        if (freedFromThisCampaign > 0) {
+          boostImpact = 'Potenciar con ' + sym + ' ' + formatNum(freedFromThisCampaign) + ' liberado de anuncios pausados en esta campaña.';
+        }
+        recs.push({ priority: 3, action: 'Concentrar presupuesto en "' + best.name.substring(0, 40) + '" — ROAS ' + best.roas.toFixed(1) + 'x, el mejor anuncio de "' + c.name + '"', campaign: c.name, impact: boostImpact, responsible: 'Pablo (redistribución)' });
+      }
+    }
+  }
+
+  // Sort by priority and limit to top 5
+  recs.sort((a, b) => a.priority - b.priority);
+  return recs.slice(0, 5);
+}
+
+function generateExecutiveNote(analysis) {
+  const { campaigns, casino, dateRange } = analysis;
+  const activeCamps = campaigns.filter(c => c.delivery.toLowerCase().includes('activ'));
+  const totalSpend = activeCamps.reduce((s, c) => s + c.spend, 0);
+  const criticals = activeCamps.filter(c => getSemaphore(c.roas) === 'red');
+  const healthy = activeCamps.filter(c => getSemaphore(c.roas) === 'green');
+  const sym = CASINOS[casino]?.symbol || '$';
+
+  let note = 'Periodo analizado: ' + dateRange.start + ' al ' + dateRange.end + '. ';
+  note += 'Gasto total en campañas activas: ' + sym + ' ' + formatNum(totalSpend) + '. ';
+
+  if (criticals.length > 0) {
+    const names = criticals.map(c => c.name).join(', ');
+    const critSpend = criticals.reduce((s, c) => s + c.spend, 0);
+    const critPct = totalSpend > 0 ? ((critSpend / totalSpend) * 100).toFixed(0) : 0;
+    note += criticals.length + ' campaña(s) en estado crítico (' + names + ') consumiendo ' + sym + ' ' + formatNum(critSpend) + ' (' + critPct + '% del gasto total) con ROAS negativo. ';
+    note += 'Se requiere acción inmediata: pausar anuncios penalizados, reestructurar segmentación y redistribuir presupuesto — cambiar solo imágenes no resolverá el problema estructural. ';
+  }
+
+  if (healthy.length > 0) {
+    const names = healthy.map(c => c.name + ' (ROAS ' + c.roas.toFixed(1) + 'x)').join(', ');
+    note += 'Campañas con buen rendimiento: ' + names + '. Proteger su presupuesto y renovar creativos periódicamente. ';
+  }
+
+  // Frequency warnings
+  const highFreqCamps = activeCamps.filter(c => c.frequency > THRESHOLDS.frequency.warning);
+  if (highFreqCamps.length > 0) {
+    note += highFreqCamps.length + ' campaña(s) con frecuencia alta (' + highFreqCamps.map(c => c.name + ': ' + c.frequency.toFixed(1)).join(', ') + ') — requieren renovación de creativos para evitar caída de rendimiento. ';
+  }
+
+  // All ads penalized
+  const allBadAds = activeCamps.flatMap(c => (c.ads || []).filter(a => a.classification && a.classification.toLowerCase().includes('debajo')));
+  if (allBadAds.length > 0) {
+    note += allBadAds.length + ' anuncio(s) penalizados por Meta con clasificación "por debajo del promedio" — estos no deben reactivarse, se necesitan creativos completamente nuevos.';
+  }
+
+  if (criticals.length === 0 && healthy.length === activeCamps.length) {
+    note += 'Todas las campañas muestran rendimiento saludable. Enfocarse en mantener creativos frescos y monitorear frecuencia.';
+  }
+
+  return note;
+}
+
+// ============================================================
+// MAIN ANALYSIS
+// ============================================================
+function runAnalysis(files, casinoId) {
+  const casino = CASINOS[casinoId];
+  let globalData = null;
+  const campaignDataMap = {};
+
+  for (const file of files) {
+    const parsed = parseCSV(file.content);
+    const type = detectCSVType(parsed.headers);
+
+    if (type === 'global') {
+      globalData = parsed;
+    } else {
+      // Identify which campaign this CSV belongs to
+      const nameCol = findColumn(parsed.headers, 'nombre del conjunto de anuncios');
+      let campaignName = file.name.replace(/^Anuncios de\s*/i, '').replace(/\.csv$/i, '').trim();
+      if (nameCol && parsed.rows.length > 0) {
+        campaignName = parsed.rows[0][nameCol] || campaignName;
+      }
+      campaignDataMap[campaignName] = parsed;
+    }
+  }
+
+  // Build campaigns from global CSV
+  const campaigns = [];
+  if (globalData) {
+    const nameCol = findColumn(globalData.headers, 'nombre de la campaña', 'nombre de la campana', 'nombre campaña');
+    const spendCol = findColumn(globalData.headers, 'importe gastado');
+    const resultsCol = findColumn(globalData.headers, 'resultados');
+    const costCol = findColumn(globalData.headers, 'costo por resultado');
+    const impressionsCol = findColumn(globalData.headers, 'impresiones');
+    const reachCol = findColumn(globalData.headers, 'alcance');
+    const freqCol = findColumn(globalData.headers, 'frecuencia');
+    const cpmCol = findColumn(globalData.headers, 'cpm');
+    const roasCol = findColumn(globalData.headers, 'roas');
+    const deliveryCol = findColumn(globalData.headers, 'entrega');
+    const indicatorCol = findColumn(globalData.headers, 'indicador de resultado');
+    const purchasesCol = findColumn(globalData.headers, 'compras');
+
+    for (const row of globalData.rows) {
+      const name = row[nameCol] || '';
+      const spend = parseNumber(row[spendCol]);
+      const roas = parseNumber(row[roasCol]);
+      const results = parseNumber(row[resultsCol]);
+      const frequency = parseNumber(row[freqCol]);
+      const delivery = row[deliveryCol] || '';
+
+      // Find matching campaign detail CSV
+      let ads = [];
+      const matchKey = Object.keys(campaignDataMap).find(k => {
+        const nl = name.toLowerCase().replace(/\s+/g, ' ');
+        const kl = k.toLowerCase().replace(/\s+/g, ' ');
+        // Direct inclusion
+        if (nl.includes(kl) || kl.includes(nl)) return true;
+        // Fuzzy: extract campaign number prefix (e.g., "1 ", "2 ", "3 ")
+        const nPrefix = nl.match(/^(\d+)\s/);
+        const kPrefix = kl.match(/^(\d+)\s/);
+        if (nPrefix && kPrefix && nPrefix[1] === kPrefix[1]) {
+          // Same campaign number — check if key words overlap significantly
+          const nWords = nl.split(/\s+/).filter(w => w.length > 1);
+          const kWords = kl.split(/\s+/).filter(w => w.length > 1);
+          const overlap = kWords.filter(w => nWords.includes(w)).length;
+          return overlap >= Math.min(kWords.length, nWords.length) * 0.6;
+        }
+        return false;
+      });
+
+      if (matchKey) {
+        const cData = campaignDataMap[matchKey];
+        const adNameCol = findColumn(cData.headers, 'nombre del anuncio');
+        const adSpendCol = findColumn(cData.headers, 'importe gastado');
+        const adResultsCol = findColumn(cData.headers, 'resultados');
+        const adCostCol = findColumn(cData.headers, 'costo por resultado');
+        const adImpCol = findColumn(cData.headers, 'impresiones');
+        const adReachCol = findColumn(cData.headers, 'alcance');
+        const adFreqCol = findColumn(cData.headers, 'frecuencia');
+        const adCpmCol = findColumn(cData.headers, 'cpm');
+        const adRoasCol = findColumn(cData.headers, 'roas');
+        const adQualityCol = findColumn(cData.headers, 'clasificación de calidad', 'clasificacion de calidad');
+        const adInteractionCol = findColumn(cData.headers, 'clasificación del porcentaje de interacción', 'interaccion');
+        const adConversionCol = findColumn(cData.headers, 'clasificación del porcentaje de conversiones', 'conversiones');
+        const adDeliveryCol = findColumn(cData.headers, 'entrega');
+        const adPurchasesCol = findColumn(cData.headers, 'compras');
+        const adBidCol = findColumn(cData.headers, 'puja');
+
+        for (const adRow of cData.rows) {
+          const adSpend = parseNumber(adRow[adSpendCol]);
+          const adRoas = parseNumber(adRow[adRoasCol]);
+          const adResults = parseNumber(adRow[adResultsCol]);
+          const adPurchases = parseNumber(adRow[adPurchasesCol]);
+          const quality = adRow[adQualityCol] || '-';
+
+          ads.push({
+            name: adRow[adNameCol] || '',
+            delivery: adRow[adDeliveryCol] || '',
+            spend: adSpend,
+            results: adResults,
+            costPerResult: parseNumber(adRow[adCostCol]),
+            impressions: parseNumber(adRow[adImpCol]),
+            reach: parseNumber(adRow[adReachCol]),
+            frequency: parseNumber(adRow[adFreqCol]),
+            cpm: parseNumber(adRow[adCpmCol]),
+            roas: adRoas,
+            purchases: adPurchases,
+            classification: quality,
+            interactionClass: adRow[adInteractionCol] || '-',
+            conversionClass: adRow[adConversionCol] || '-',
+            bid: adBidCol ? parseNumber(adRow[adBidCol]) : 0
+          });
+        }
+        delete campaignDataMap[matchKey];
+      }
+
+      campaigns.push({
+        name,
+        type: detectCampaignType(name),
+        delivery,
+        spend,
+        results,
+        costPerResult: parseNumber(row[costCol]),
+        indicator: row[indicatorCol] || '',
+        impressions: parseNumber(row[impressionsCol]),
+        reach: parseNumber(row[reachCol]),
+        frequency,
+        cpm: parseNumber(row[cpmCol]),
+        roas,
+        purchases: parseNumber(row[purchasesCol]),
+        semaphore: getSemaphore(roas),
+        ads
+      });
+    }
+  }
+
+  // Handle remaining campaign CSVs without global match
+  for (const [key, cData] of Object.entries(campaignDataMap)) {
+    const adNameCol = findColumn(cData.headers, 'nombre del anuncio');
+    const adSpendCol = findColumn(cData.headers, 'importe gastado');
+    const adResultsCol = findColumn(cData.headers, 'resultados');
+    const adCostCol = findColumn(cData.headers, 'costo por resultado');
+    const adImpCol = findColumn(cData.headers, 'impresiones');
+    const adReachCol = findColumn(cData.headers, 'alcance');
+    const adFreqCol = findColumn(cData.headers, 'frecuencia');
+    const adCpmCol = findColumn(cData.headers, 'cpm');
+    const adRoasCol = findColumn(cData.headers, 'roas');
+    const setNameCol = findColumn(cData.headers, 'nombre del conjunto de anuncios', 'conjunto de anuncios');
+
+    let totalSpend = 0, totalResults = 0, totalImp = 0, totalReach = 0;
+    const ads = [];
+
+    for (const adRow of cData.rows) {
+      const adSpend = parseNumber(adRow[adSpendCol]);
+      totalSpend += adSpend;
+      totalResults += parseNumber(adRow[adResultsCol]);
+      totalImp += parseNumber(adRow[adImpCol]);
+      totalReach += parseNumber(adRow[adReachCol]);
+      ads.push({
+        name: adRow[adNameCol] || '',
+        spend: adSpend,
+        results: parseNumber(adRow[adResultsCol]),
+        costPerResult: parseNumber(adRow[adCostCol]),
+        impressions: parseNumber(adRow[adImpCol]),
+        reach: parseNumber(adRow[adReachCol]),
+        frequency: parseNumber(adRow[adFreqCol]),
+        cpm: parseNumber(adRow[adCpmCol]),
+        roas: parseNumber(adRow[adRoasCol]),
+        classification: '-',
+        interactionClass: '-',
+        conversionClass: '-',
+        bid: 0
+      });
+    }
+
+    const campName = (cData.rows[0] && setNameCol) ? cData.rows[0][setNameCol] : key;
+    const avgRoas = totalSpend > 0 ? ads.reduce((s, a) => s + a.roas * a.spend, 0) / totalSpend : 0;
+
+    campaigns.push({
+      name: campName,
+      type: detectCampaignType(campName),
+      delivery: 'active',
+      spend: totalSpend,
+      results: totalResults,
+      costPerResult: totalResults > 0 ? totalSpend / totalResults : 0,
+      indicator: '',
+      impressions: totalImp,
+      reach: totalReach,
+      frequency: totalReach > 0 ? totalImp / totalReach : 0,
+      cpm: totalImp > 0 ? (totalSpend / totalImp) * 1000 : 0,
+      roas: avgRoas,
+      purchases: 0,
+      semaphore: getSemaphore(avgRoas),
+      ads
+    });
+  }
+
+  // Sort: active first, then by spend desc
+  campaigns.sort((a, b) => {
+    const aActive = a.delivery.toLowerCase().includes('activ') ? 0 : 1;
+    const bActive = b.delivery.toLowerCase().includes('activ') ? 0 : 1;
+    if (aActive !== bActive) return aActive - bActive;
+    return b.spend - a.spend;
+  });
+
+  // Determine date range from first file
+  let dateRange = { start: '', end: '' };
+  const firstFile = files[0];
+  if (firstFile) {
+    const parsed = parseCSV(firstFile.content);
+    if (parsed.rows.length > 0) {
+      const startCol = findColumn(parsed.headers, 'inicio del informe', 'inicio');
+      const endCol = findColumn(parsed.headers, 'fin del informe', 'fin');
+      if (startCol && endCol) {
+        dateRange.start = parsed.rows[0][startCol] || '';
+        dateRange.end = parsed.rows[0][endCol] || '';
+      }
+    }
+  }
+
+  const analysis = {
+    casino: casinoId,
+    casinoName: casino.name,
+    currency: casino.currency,
+    symbol: casino.symbol,
+    dateRange,
+    campaigns,
+    recommendations: generateRecommendations(campaigns),
+    executiveNote: '',
+    timestamp: new Date().toISOString()
+  };
+
+  analysis.executiveNote = generateExecutiveNote(analysis);
+  return analysis;
+}
+
+// ============================================================
+// FORMAT HELPERS
+// ============================================================
+function formatNum(n) {
+  if (n === 0) return '0';
+  if (Math.abs(n) >= 1000000) return (n / 1000000).toFixed(2) + 'M';
+  if (Math.abs(n) >= 1000) return n.toLocaleString('es-MX', { maximumFractionDigits: 0 });
+  if (Number.isInteger(n)) return n.toString();
+  return n.toFixed(2);
+}
+
+function formatMoney(n, sym) {
+  return `${sym} ${formatNum(n)}`;
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  return d;
+}
+
+// Determine metric unit from campaign indicator
+function getMetricUnit(indicator) {
+  if (!indicator) return '';
+  const ind = indicator.toLowerCase();
+  if (ind.includes('registration') || ind.includes('registro')) return 'registros';
+  if (ind.includes('purchase') || ind.includes('compra')) return 'compras';
+  return '';
+}
+
+function getMetricUnitSingular(indicator) {
+  if (!indicator) return 'resultado';
+  const ind = indicator.toLowerCase();
+  if (ind.includes('registration') || ind.includes('registro')) return 'registro';
+  if (ind.includes('purchase') || ind.includes('compra')) return 'compra';
+  return 'resultado';
+}
+
+// ============================================================
+// RENDER: TAB 1 - RESUMEN EJECUTIVO
+// ============================================================
+function renderSummary(analysis) {
+  const { campaigns, symbol, dateRange, casinoName } = analysis;
+  const activeCampaigns = campaigns.filter(c => c.delivery.toLowerCase().includes('activ'));
+  const totalSpend = activeCampaigns.reduce((s, c) => s + c.spend, 0);
+  const totalResults = activeCampaigns.reduce((s, c) => s + c.results, 0);
+  const weightedRoas = totalSpend > 0 ? activeCampaigns.reduce((s, c) => s + c.roas * c.spend, 0) / totalSpend : 0;
+  const avgCpm = activeCampaigns.length > 0 ? activeCampaigns.reduce((s, c) => s + c.cpm, 0) / activeCampaigns.length : 0;
+  const totalImpressions = activeCampaigns.reduce((s, c) => s + c.impressions, 0);
+
+  let html = `
+    <div style="margin-bottom:20px;">
+      <h2 style="font-size:20px;font-weight:800;">${casinoName} — Diagnóstico Meta Ads</h2>
+      <p style="font-size:12px;color:var(--t3);margin-top:4px;">${formatDate(dateRange.start)} al ${formatDate(dateRange.end)} | ${activeCampaigns.length} campañas activas</p>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi kpi-hero">
+        <div class="kpi-label">Gasto Total</div>
+        <div class="kpi-value">${formatMoney(totalSpend, symbol)}</div>
+        <div class="kpi-sub">${activeCampaigns.length} campañas activas</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Resultados</div>
+        <div class="kpi-value">${formatNum(totalResults)}${(() => { const units = activeCampaigns.map(c => getMetricUnit(c.indicator)).filter(u => u); const unique = [...new Set(units)]; return unique.length === 1 ? ' ' + unique[0] : ''; })()}</div>
+        <div class="kpi-sub">${formatNum(totalImpressions)} impresiones</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">ROAS Ponderado</div>
+        <div class="kpi-value" style="color:var(--${getSemaphore(weightedRoas) === 'green' ? 'positive' : getSemaphore(weightedRoas) === 'yellow' ? 'warning' : 'negative'})">${weightedRoas.toFixed(2)}x</div>
+        <div class="kpi-sub">${getSemaphoreLabel(getSemaphore(weightedRoas))}</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">CPM Promedio</div>
+        <div class="kpi-value">${formatMoney(avgCpm, symbol)}</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Diagnóstico Rápido por Campaña</div>
+      <div class="card-desc">Estado, problema principal y acción inmediata para cada campaña activa</div>
+      <div style="overflow-x:auto">
+      <table class="diag-table">
+        <thead>
+          <tr>
+            <th>Campaña</th>
+            <th>Tipo</th>
+            <th>Estado</th>
+            <th>Problema Principal</th>
+            <th>Acción Inmediata</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${activeCampaigns.map(c => {
+            const diag = analyzeCampaignDiagnostic(c);
+            return '<tr>' +
+              '<td style="font-weight:600">' + c.name + '</td>' +
+              '<td><span class="badge badge-' + (getSemaphore(c.roas) === 'green' ? 'green' : getSemaphore(c.roas) === 'yellow' ? 'yellow' : 'red') + '" style="font-size:10px;padding:3px 8px;">' + getCampaignTypeLabel(c.type) + '</span></td>' +
+              '<td class="state-cell" style="color:var(--' + (diag.stateColor === 'green' ? 'positive' : diag.stateColor === 'yellow' ? 'warning' : 'negative') + ')">' + diag.state + '</td>' +
+              '<td style="font-size:12px;color:var(--t2);max-width:350px;">' + diag.mainProblem + '</td>' +
+              '<td style="font-size:12px;color:var(--t1);max-width:350px;">' + diag.immediateAction + '</td>' +
+            '</tr>';
+          }).join('')}
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">KPIs por Campaña</div>
+      <div class="card-desc">Campañas activas ordenadas por gasto</div>
+      <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Campaña</th>
+            <th>Tipo</th>
+            <th>Estado</th>
+            <th class="r">Gasto</th>
+            <th class="r">Resultados</th>
+            <th class="r">Costo/Resultado</th>
+            <th class="r">ROAS</th>
+            <th class="r">Impresiones</th>
+            <th class="r">Frecuencia</th>
+            <th class="r">CPM</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${activeCampaigns.map(c => {
+            const sem = getSemaphore(c.roas);
+            const freqInfo = getFrequencyLevel(c.frequency);
+            const unit = getMetricUnit(c.indicator);
+            const unitSing = getMetricUnitSingular(c.indicator);
+            return '<tr>' +
+              '<td style="font-weight:600">' + c.name + '</td>' +
+              '<td><span class="badge badge-' + (sem === 'green' ? 'green' : sem === 'yellow' ? 'yellow' : 'red') + '" style="font-size:10px;padding:3px 8px;">' + getCampaignTypeLabel(c.type) + '</span></td>' +
+              '<td><span class="semaphore"><span class="semaphore-dot ' + sem + '"></span>' + getSemaphoreLabel(sem) + '</span></td>' +
+              '<td class="r">' + formatMoney(c.spend, symbol) + '</td>' +
+              '<td class="r">' + formatNum(c.results) + (unit ? ' ' + unit : '') + '</td>' +
+              '<td class="r">' + formatMoney(c.costPerResult, symbol) + (unitSing ? ' por ' + unitSing : '') + '</td>' +
+              '<td class="r" style="font-weight:700;color:var(--' + (sem === 'green' ? 'positive' : sem === 'yellow' ? 'warning' : 'negative') + ')">' + c.roas.toFixed(2) + 'x</td>' +
+              '<td class="r">' + formatNum(c.impressions) + '</td>' +
+              '<td class="r"><span style="color:var(--' + (freqInfo.color === 'green' ? 't1' : freqInfo.color === 'yellow' ? 'warning' : 'negative') + ')">' + c.frequency.toFixed(1) + (freqInfo.level !== 'ok' ? ' ⚠️' : '') + '</span></td>' +
+              '<td class="r">' + formatMoney(c.cpm, symbol) + '</td>' +
+            '</tr>';
+          }).join('')}
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">¿Es suficiente solo cambiar imágenes?</div>
+      <div class="card-desc">Análisis por campaña activa</div>
+      <div class="creative-grid">
+        ${activeCampaigns.map(c => {
+          const creative = analyzeCreativeNeed(c);
+          return '<div class="creative-card">' +
+            '<div class="creative-icon">' + creative.icon + '</div>' +
+            '<div class="creative-campaign">' + c.name + '</div>' +
+            '<div class="creative-verdict">' + creative.verdict + '</div>' +
+          '</div>';
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="exec-note">
+      <div class="exec-note-label">Nota para directivos</div>
+      <div class="exec-note-text">${analysis.executiveNote}</div>
+    </div>
+  `;
+
+  $('tab-summary').innerHTML = html;
+}
+
+// ============================================================
+// RENDER: TAB 2 - DETALLE POR CAMPAÑA
+// ============================================================
+function renderDetail(analysis) {
+  const { campaigns, symbol } = analysis;
+  const activeCampaigns = campaigns.filter(c => c.delivery.toLowerCase().includes('activ'));
+
+  let html = '<h2 style="font-size:20px;font-weight:800;margin-bottom:20px;">Detalle por Campaña</h2>';
+
+  for (const c of activeCampaigns) {
+    const sem = getSemaphore(c.roas);
+    const freqInfo = getFrequencyLevel(c.frequency);
+    const hasAds = c.ads && c.ads.length > 0;
+    const diag = analyzeCampaignDiagnostic(c);
+    const isRegistration = c.indicator && c.indicator.toLowerCase().includes('registration');
+    const metricLabel = isRegistration ? 'Registros' : 'Compras';
+
+    // Find best and worst ads
+    let bestAd = null, worstAd = null;
+    if (hasAds) {
+      const activeAds = c.ads.filter(a => a.spend > 0);
+      if (activeAds.length > 0) {
+        bestAd = activeAds.reduce((best, a) => a.roas > best.roas ? a : best, activeAds[0]);
+        worstAd = activeAds.reduce((worst, a) => a.roas < worst.roas ? a : worst, activeAds[0]);
+        if (bestAd === worstAd) worstAd = null;
+      }
+    }
+
+    html += '<div class="card">' +
+      '<div class="card-header" onclick="toggleCard(this)">' +
+        '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
+          '<span class="semaphore"><span class="semaphore-dot ' + sem + '"></span></span>' +
+          '<span style="font-size:16px;font-weight:700;">' + c.name + '</span>' +
+          '<span class="badge badge-' + (sem === 'green' ? 'green' : sem === 'yellow' ? 'yellow' : 'red') + '">' + getCampaignTypeLabel(c.type) + '</span>' +
+          '<span style="font-size:12px;color:var(--t2);">ROAS ' + c.roas.toFixed(2) + 'x | ' + formatMoney(c.spend, symbol) + ' | ' + c.results + ' ' + (getMetricUnit(c.indicator) || metricLabel) + ' | Freq ' + c.frequency.toFixed(1) + '</span>' +
+          '<span class="badge badge-' + (diag.stateColor === 'green' ? 'green' : diag.stateColor === 'yellow' ? 'yellow' : 'red') + '">' + diag.state + '</span>' +
+        '</div>' +
+        '<span class="card-toggle open">&#9660;</span>' +
+      '</div>' +
+      '<div class="card-body" style="margin-top:16px;">';
+
+    if (hasAds) {
+      html += '<div class="detail-table-wrap"><table>' +
+        '<thead><tr>' +
+          '<th>Campaña</th>' +
+          '<th>Anuncio</th>' +
+          '<th>Estado</th>' +
+          '<th class="r">Resultados</th>' +
+          '<th>Métrica</th>' +
+          '<th class="r">Costo/Result</th>' +
+          '<th class="r">Gasto</th>' +
+          '<th class="r">Impresiones</th>' +
+          '<th class="r">ROAS</th>' +
+          '<th class="r">Frecuencia</th>' +
+          '<th class="r">CPM</th>' +
+          '<th>Semáforo</th>' +
+          '<th>Origen del Problema</th>' +
+          '<th>Ajuste Config (Pablo)</th>' +
+          '<th>Qué Mejora Arte (Abraham)</th>' +
+        '</tr></thead><tbody>';
+
+      for (const ad of c.ads) {
+        const isBest = bestAd && ad.name === bestAd.name;
+        const isWorst = worstAd && ad.name === worstAd.name;
+        const adAnalysis = analyzeAdProblem(ad, c);
+        const isInactive = adAnalysis.isInactive;
+        const rowClass = isInactive ? '' : (isBest ? 'best-row' : isWorst ? 'worst-row' : '');
+        const adSem = isInactive ? 'inactive' : getAdSemaphore(ad, c.type);
+        const adSemColor = isInactive ? '' : getAdSemaphoreColor(adSem);
+        const adSemLabel = isInactive ? 'Inactivo' : getAdSemaphoreLabel(adSem);
+        const adSemCSSVar = isInactive ? 't3' : getAdSemaphoreCSSVar(adSem);
+        const adSemBadge = isInactive ? '' : getAdSemaphoreBadgeClass(adSem);
+        const classificationBad = ad.classification && ad.classification.toLowerCase().includes('debajo');
+        const unit = getMetricUnit(c.indicator);
+        const unitSing = getMetricUnitSingular(c.indicator);
+
+        // Semaphore label with benchmark suffix
+        let semaphoreDisplay = '';
+        if (isInactive) {
+          semaphoreDisplay = '<span style="white-space:nowrap;color:var(--t3);font-weight:700;">&#9899; Inactivo</span>';
+        } else {
+          let semLabel = adSemLabel;
+          if (adAnalysis.isBenchmark && adSem === 'optimal') {
+            semLabel = 'Óptimo — BENCHMARK';
+          }
+          semaphoreDisplay = '<span class="badge ' + adSemBadge + '" style="white-space:nowrap;"><span class="semaphore-dot ' + adSemColor + '" style="display:inline-block;width:8px;height:8px;margin-right:4px;vertical-align:middle;"></span>' + semLabel + '</span>';
+        }
+
+        html += '<tr class="' + rowClass + '">' +
+          '<td style="font-weight:600;font-size:11px;color:var(--t3);max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + c.name + '</td>' +
+          '<td style="font-weight:600">' + ad.name +
+            (isBest && !isInactive ? ' <span style="color:var(--positive);font-size:10px;font-weight:800;">MEJOR — BENCHMARK</span>' : '') +
+            (isWorst && !isInactive ? ' <span style="color:var(--negative);font-size:10px;font-weight:800;">PEOR</span>' : '') +
+            (classificationBad ? ' <span class="badge badge-red" style="font-size:9px;padding:2px 6px;">PENALIZADO</span>' : '') +
+          '</td>' +
+          '<td style="font-size:11px;color:var(--t3)">' + (ad.delivery || '—') + '</td>' +
+          '<td class="r">' + formatNum(ad.results) + (unit ? ' ' + unit : '') + '</td>' +
+          '<td style="font-size:10px;color:var(--t3)">' + metricLabel + '</td>' +
+          '<td class="r">' + formatMoney(ad.costPerResult, symbol) + (unitSing && ad.costPerResult > 0 ? ' por ' + unitSing : '') + '</td>' +
+          '<td class="r">' + formatMoney(ad.spend, symbol) + '</td>' +
+          '<td class="r">' + formatNum(ad.impressions) + '</td>' +
+          '<td class="r" style="font-weight:700;color:var(--' + adSemCSSVar + ')">' + ad.roas.toFixed(2) + 'x</td>' +
+          '<td class="r">' + ad.frequency.toFixed(1) + '</td>' +
+          '<td class="r">' + formatMoney(ad.cpm, symbol) + '</td>' +
+          '<td>' + semaphoreDisplay + '</td>' +
+          '<td class="analysis-cell">' + adAnalysis.problem + '</td>' +
+          '<td class="analysis-cell">' + adAnalysis.configFix + '</td>' +
+          '<td class="analysis-cell">' + adAnalysis.creativeFix + '</td>' +
+        '</tr>';
+      }
+
+      html += '</tbody></table></div>';
+    } else {
+      html += '<div style="text-align:center;padding:24px;color:var(--t3);font-size:13px;">Sube el CSV de detalle de esta campaña para ver anuncios individuales</div>';
+    }
+
+    html += '</div></div>';
+  }
+
+  // Show archived campaigns if any
+  const archived = campaigns.filter(c => !c.delivery.toLowerCase().includes('activ'));
+  if (archived.length > 0) {
+    html += '<h3 style="font-size:14px;font-weight:700;color:var(--t3);margin:28px 0 12px;">Campañas archivadas (' + archived.length + ')</h3>';
+    for (const c of archived) {
+      html += '<div class="card" style="opacity:.6">' +
+        '<div style="display:flex;align-items:center;gap:12px;">' +
+          '<span style="font-size:13px;font-weight:600;color:var(--t3)">' + c.name + '</span>' +
+          '<span class="badge badge-' + (getSemaphore(c.roas) === 'green' ? 'green' : getSemaphore(c.roas) === 'yellow' ? 'yellow' : 'red') + '" style="font-size:9px;padding:2px 8px;">ROAS ' + c.roas.toFixed(2) + 'x</span>' +
+          '<span style="font-size:11px;color:var(--t3)">' + formatMoney(c.spend, symbol) + '</span>' +
+        '</div>' +
+      '</div>';
+    }
+  }
+
+  $('tab-detail').innerHTML = html;
+}
+
+// ============================================================
+// RENDER: TAB 3 - ACCIONES Y ESTRATEGIA
+// ============================================================
+function renderActions(analysis) {
+  const { recommendations, campaigns, symbol } = analysis;
+  const activeCampaigns = campaigns.filter(c => c.delivery.toLowerCase().includes('activ'));
+  const totalSpend = activeCampaigns.reduce((s, c) => s + c.spend, 0);
+
+  let html = '<h2 style="font-size:20px;font-weight:800;margin-bottom:20px;">Acciones y Estrategia</h2>';
+
+  // 1. Diagnóstico Rápido por Campaña
+  html += '<div class="card">' +
+    '<div class="card-title">Diagnóstico Rápido por Campaña</div>' +
+    '<div class="card-desc">Estado actual y acción requerida para cada campaña activa</div>' +
+    '<div style="overflow-x:auto"><table class="diag-table">' +
+    '<thead><tr><th>Campaña</th><th>Estado</th><th>Problema Principal</th><th>Acción Inmediata</th></tr></thead>' +
+    '<tbody>';
+
+  for (const c of activeCampaigns) {
+    const diag = analyzeCampaignDiagnostic(c);
+    html += '<tr>' +
+      '<td style="font-weight:600">' + c.name + '</td>' +
+      '<td class="state-cell" style="color:var(--' + (diag.stateColor === 'green' ? 'positive' : diag.stateColor === 'yellow' ? 'warning' : 'negative') + ')"><span class="semaphore-dot ' + diag.stateColor + '" style="display:inline-block;width:8px;height:8px;margin-right:6px;vertical-align:middle;"></span>' + diag.state + '</td>' +
+      '<td style="font-size:12px;color:var(--t2);max-width:400px;">' + diag.mainProblem + '</td>' +
+      '<td style="font-size:12px;color:var(--t1);max-width:400px;">' + diag.immediateAction + '</td>' +
+    '</tr>';
+  }
+
+  html += '</tbody></table></div></div>';
+
+  // 2. Top 5 Acciones Inmediatas
+  html += '<div class="card">' +
+    '<div class="card-title">Top ' + recommendations.length + ' Acciones Inmediatas</div>' +
+    '<div class="card-desc">Priorizadas por impacto en rendimiento</div>';
+
+  if (recommendations.length > 0) {
+    html += '<div style="overflow-x:auto"><table>' +
+      '<thead><tr><th style="width:40px">#</th><th>Acción</th><th>Campaña</th><th>Impacto Esperado</th><th>Responsable</th></tr></thead>' +
+      '<tbody>';
+
+    for (let i = 0; i < recommendations.length; i++) {
+      const r = recommendations[i];
+      html += '<tr>' +
+        '<td><span class="rec-number">' + (i + 1) + '</span></td>' +
+        '<td style="font-weight:600;font-size:13px;">' + r.action + '</td>' +
+        '<td><span class="rec-campaign-tag">' + r.campaign + '</span></td>' +
+        '<td style="font-size:12px;color:var(--t2);">' + r.impact + '</td>' +
+        '<td style="font-size:12px;font-weight:600;color:var(--primary);white-space:nowrap;">' + r.responsible + '</td>' +
+      '</tr>';
+    }
+
+    html += '</tbody></table></div>';
+  } else {
+    html += '<div style="padding:20px;text-align:center;color:var(--t3)">No se detectaron acciones urgentes. Las campañas operan dentro de parámetros normales.</div>';
+  }
+  html += '</div>';
+
+  // 3. Nota Clave para Directivos
+  const criticals = activeCampaigns.filter(c => getSemaphore(c.roas) === 'red');
+  const healthy = activeCampaigns.filter(c => getSemaphore(c.roas) === 'green');
+  let noteText = '';
+  if (criticals.length > 0) {
+    const critSpend = criticals.reduce((s, c) => s + c.spend, 0);
+    noteText = 'Se están perdiendo aproximadamente ' + symbol + ' ' + formatNum(critSpend) + ' en campañas con ROAS negativo. ';
+    noteText += 'Esto representa el ' + (totalSpend > 0 ? ((critSpend / totalSpend) * 100).toFixed(0) : 0) + '% del gasto total. ';
+    noteText += 'No es un problema de creativos — es un problema de estructura (audiencia, segmentación, objetivo). ';
+    noteText += 'Pausar los anuncios identificados como "PAUSAR YA" y reasignar ese presupuesto a las campañas con ROAS positivo generaría un retorno inmediato.';
+  } else if (healthy.length === activeCampaigns.length) {
+    noteText = 'Todas las campañas muestran rendimiento positivo. El enfoque debe estar en mantener creativos frescos para evitar fatiga de audiencia y monitorear la frecuencia semanalmente.';
+  } else {
+    noteText = 'La mayoría de las campañas operan en rango aceptable. Priorizar la optimización de las campañas en estado "Atención" para llevarlas a rendimiento saludable. Renovar creativos en campañas con frecuencia alta.';
+  }
+
+  html += '<div class="highlight-box">' +
+    '<div class="highlight-box-label">Nota Clave para Directivos</div>' +
+    '<div class="highlight-box-text">' + noteText + '</div>' +
+  '</div>';
+
+  // 4. Estrategia por Campaña
+  html += '<div class="card">' +
+    '<div class="card-title">Estrategia por Campaña</div>' +
+    '<div class="card-desc">Análisis detallado con recomendaciones por aspecto para cada campaña activa</div>';
+
+  for (const c of activeCampaigns) {
+    const strategy = generateCampaignStrategy(c);
+    const sem = getSemaphore(c.roas);
+
+    html += '<div style="margin-bottom:28px;">' +
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--border);">' +
+        '<span class="semaphore-dot ' + sem + '"></span>' +
+        '<span style="font-size:15px;font-weight:700;">' + c.name + '</span>' +
+        '<span class="badge badge-' + (sem === 'green' ? 'green' : sem === 'yellow' ? 'yellow' : 'red') + '" style="font-size:10px;">' + getCampaignTypeLabel(c.type) + '</span>' +
+      '</div>' +
+      '<table class="strategy-table"><thead><tr><th>Aspecto</th><th>Situación Actual</th><th>Recomendación</th></tr></thead><tbody>';
+
+    for (const row of strategy) {
+      html += '<tr>' +
+        '<td>' + row.aspect + '</td>' +
+        '<td style="font-size:12px;">' + row.situation + '</td>' +
+        '<td style="font-size:12px;">' + row.recommendation + '</td>' +
+      '</tr>';
+    }
+
+    html += '</tbody></table></div>';
+  }
+
+  html += '</div>';
+
+  // 5. Budget distribution (kept from original)
+  html += '<div class="card">' +
+    '<div class="card-title">Distribución de Presupuesto</div>' +
+    '<div class="card-desc">Porcentaje actual del gasto por campaña activa</div>' +
+    '<table class="budget-table"><thead><tr>' +
+      '<th>Campaña</th><th>Tipo</th><th class="r">Gasto Actual</th><th class="r">% del Total</th><th class="r">ROAS</th><th>Recomendación</th>' +
+    '</tr></thead><tbody>';
+
+  for (const c of activeCampaigns) {
+    const pct = totalSpend > 0 ? (c.spend / totalSpend * 100) : 0;
+    const sem = getSemaphore(c.roas);
+    let rec = 'Mantener';
+    if (sem === 'red') rec = 'Reducir / Pausar';
+    else if (sem === 'green' && c.roas > 10) rec = 'Potenciar';
+
+    html += '<tr>' +
+      '<td style="font-weight:600">' + c.name + '</td>' +
+      '<td>' + getCampaignTypeLabel(c.type) + '</td>' +
+      '<td class="r">' + formatMoney(c.spend, symbol) + '</td>' +
+      '<td class="r">' + pct.toFixed(1) + '%</td>' +
+      '<td class="r" style="color:var(--' + (sem === 'green' ? 'positive' : sem === 'yellow' ? 'warning' : 'negative') + ')">' + c.roas.toFixed(2) + 'x</td>' +
+      '<td><span class="badge badge-' + (sem === 'red' ? 'red' : (sem === 'green' && c.roas > 10 ? 'green' : 'yellow')) + '">' + rec + '</span></td>' +
+    '</tr>';
+  }
+
+  html += '</tbody></table></div>';
+
+  $('tab-actions').innerHTML = html;
+}
+
+// ============================================================
+// RENDER: TAB 4 - GRÁFICAS
+// ============================================================
+function renderCharts(analysis) {
+  const { campaigns, symbol } = analysis;
+  const active = campaigns.filter(c => c.delivery.toLowerCase().includes('activ'));
+
+  // Destroy existing charts
+  chartInstances.forEach(c => c.destroy());
+  chartInstances = [];
+
+  let html = `
+    <h2 style="font-size:20px;font-weight:800;margin-bottom:20px;">Gráficas Comparativas</h2>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">ROAS por Campaña</div>
+        <canvas id="chartRoas"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Costo por Resultado</div>
+        <canvas id="chartCost"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Distribución de Gasto</div>
+        <canvas id="chartSpend"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Frecuencia por Campaña</div>
+        <canvas id="chartFreq"></canvas>
+      </div>
+    </div>
+  `;
+
+  // Check if there are ads for best/worst chart
+  const allAds = active.flatMap(c => (c.ads || []).filter(a => a.spend > 0));
+  if (allAds.length > 0) {
+    html += `
+      <div class="charts-grid" style="margin-top:16px;">
+        <div class="chart-card" style="grid-column:1/-1;">
+          <div class="chart-title">Top 5 Mejores y Peores Anuncios por ROAS</div>
+          <canvas id="chartAds"></canvas>
+        </div>
+      </div>
+    `;
+  }
+
+  $('tab-charts').innerHTML = html;
+
+  // Wait for DOM to render
+  requestAnimationFrame(() => {
+    const chartColors = active.map(c => {
+      const sem = getSemaphore(c.roas);
+      if (sem === 'green') return '#059669';
+      if (sem === 'yellow') return '#D97706';
+      return '#DC2626';
+    });
+
+    const defaultOptions = {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#FFFFFF',
+          titleColor: '#0F172A',
+          bodyColor: '#475569',
+          borderColor: '#E2E8F0',
+          borderWidth: 1,
+          cornerRadius: 10,
+          padding: 12
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#94A3B8', font: { size: 11 } }, grid: { color: '#F1F5F9' } },
+        y: { ticks: { color: '#94A3B8', font: { size: 11 } }, grid: { color: '#F1F5F9' } }
+      }
+    };
+
+    // ROAS Chart
+    chartInstances.push(new Chart($('chartRoas'), {
+      type: 'bar',
+      data: {
+        labels: active.map(c => c.name),
+        datasets: [{
+          data: active.map(c => c.roas),
+          backgroundColor: chartColors,
+          borderRadius: 6,
+          barThickness: 32
+        }]
+      },
+      options: {
+        ...defaultOptions,
+        indexAxis: 'y',
+        plugins: {
+          ...defaultOptions.plugins,
+          annotation: {
+            annotations: {
+              line1: { type: 'line', xMin: 1, xMax: 1, borderColor: '#DC2626', borderWidth: 1, borderDash: [4, 4] },
+              line2: { type: 'line', xMin: 5, xMax: 5, borderColor: '#059669', borderWidth: 1, borderDash: [4, 4] }
+            }
+          }
+        }
+      }
+    }));
+
+    // Cost per Result Chart
+    chartInstances.push(new Chart($('chartCost'), {
+      type: 'bar',
+      data: {
+        labels: active.map(c => c.name),
+        datasets: [{
+          data: active.map(c => c.costPerResult),
+          backgroundColor: chartColors.map(c => c + '99'),
+          borderColor: chartColors,
+          borderWidth: 1,
+          borderRadius: 6,
+          barThickness: 32
+        }]
+      },
+      options: {
+        ...defaultOptions,
+        scales: {
+          ...defaultOptions.scales,
+          y: { ...defaultOptions.scales.y, ticks: { ...defaultOptions.scales.y.ticks, callback: v => symbol + ' ' + formatNum(v) } }
+        }
+      }
+    }));
+
+    // Spend Distribution (Donut)
+    chartInstances.push(new Chart($('chartSpend'), {
+      type: 'doughnut',
+      data: {
+        labels: active.map(c => c.name),
+        datasets: [{
+          data: active.map(c => c.spend),
+          backgroundColor: ['#2563EB', '#7C3AED', '#059669', '#D97706', '#DC2626', '#0891B2', '#E11D48'],
+          borderColor: '#FFFFFF',
+          borderWidth: 3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: { color: '#475569', font: { size: 11 }, padding: 12 }
+          },
+          tooltip: defaultOptions.plugins.tooltip
+        }
+      }
+    }));
+
+    // Frequency Chart
+    const freqColors = active.map(c => {
+      const fl = getFrequencyLevel(c.frequency);
+      if (fl.color === 'green') return '#059669';
+      if (fl.color === 'yellow') return '#D97706';
+      return '#DC2626';
+    });
+
+    chartInstances.push(new Chart($('chartFreq'), {
+      type: 'bar',
+      data: {
+        labels: active.map(c => c.name),
+        datasets: [{
+          data: active.map(c => c.frequency),
+          backgroundColor: freqColors.map(c => c + '66'),
+          borderColor: freqColors,
+          borderWidth: 2,
+          borderRadius: 6,
+          barThickness: 32
+        }]
+      },
+      options: {
+        ...defaultOptions,
+        indexAxis: 'y'
+      }
+    }));
+
+    // Best/Worst Ads Chart
+    if (allAds.length > 0 && $('chartAds')) {
+      const sortedAds = [...allAds].sort((a, b) => b.roas - a.roas);
+      const topAds = sortedAds.slice(0, 5);
+      const bottomAds = sortedAds.slice(-5).reverse();
+      const combined = [...topAds, ...bottomAds];
+      const uniqueAds = [...new Map(combined.map(a => [a.name, a])).values()].slice(0, 10);
+
+      chartInstances.push(new Chart($('chartAds'), {
+        type: 'bar',
+        data: {
+          labels: uniqueAds.map(a => a.name.substring(0, 30)),
+          datasets: [{
+            data: uniqueAds.map(a => a.roas),
+            backgroundColor: uniqueAds.map(a => getSemaphore(a.roas) === 'green' ? '#05966933' : getSemaphore(a.roas) === 'yellow' ? '#D9770633' : '#DC262633'),
+            borderColor: uniqueAds.map(a => getSemaphore(a.roas) === 'green' ? '#059669' : getSemaphore(a.roas) === 'yellow' ? '#D97706' : '#DC2626'),
+            borderWidth: 1,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          ...defaultOptions,
+          indexAxis: 'y'
+        }
+      }));
+    }
+  });
+}
+
+// ============================================================
+// TOGGLE CARDS
+// ============================================================
+function toggleCard(header) {
+  const body = header.nextElementSibling;
+  const toggle = header.querySelector('.card-toggle');
+  body.classList.toggle('collapsed');
+  toggle.classList.toggle('open');
+}
+
+// ============================================================
+// TABS NAVIGATION
+// ============================================================
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+    tab.classList.add('active');
+    $('tab-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+// ============================================================
+// FILE HANDLING
+// ============================================================
+casinoSelect.addEventListener('change', () => {
+  const id = casinoSelect.value;
+  if (id && CASINOS[id]) {
+    currencyBadge.textContent = CASINOS[id].currency;
+  } else {
+    currencyBadge.textContent = '---';
+  }
+  updateAnalyzeBtn();
+});
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  handleFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+function handleFiles(files) {
+  for (const file of files) {
+    if (!file.name.endsWith('.csv')) continue;
+    if (uploadedFiles.find(f => f.name === file.name)) continue;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      // Try to fix encoding
+      let content = e.target.result;
+      uploadedFiles.push({ name: file.name, content });
+      renderFilesList();
+      updateAnalyzeBtn();
+    };
+    reader.readAsText(file, 'utf-8');
+  }
+}
+
+function renderFilesList() {
+  filesList.innerHTML = uploadedFiles.map((f, i) => {
+    const parsed = parseCSV(f.content);
+    const type = detectCSVType(parsed.headers);
+    const typeClass = type === 'global' ? 'global' : 'campaign';
+    const typeLabel = type === 'global' ? 'Global' : 'Campaña';
+    return `<span class="file-chip ${typeClass}">${f.name} <span style="opacity:.5;font-size:9px">(${typeLabel})</span> <span class="remove" onclick="removeFile(${i})">&times;</span></span>`;
+  }).join('');
+}
+
+function removeFile(idx) {
+  uploadedFiles.splice(idx, 1);
+  renderFilesList();
+  updateAnalyzeBtn();
+}
+
+function updateAnalyzeBtn() {
+  analyzeBtn.disabled = !(casinoSelect.value && uploadedFiles.length > 0);
+  clearBtn.disabled = uploadedFiles.length === 0;
+}
+
+// ============================================================
+// ANALYZE
+// ============================================================
+analyzeBtn.addEventListener('click', () => {
+  if (!casinoSelect.value || uploadedFiles.length === 0) return;
+
+  currentAnalysis = runAnalysis(uploadedFiles, casinoSelect.value);
+
+  // Render all tabs
+  renderSummary(currentAnalysis);
+  renderDetail(currentAnalysis);
+  renderActions(currentAnalysis);
+  renderCharts(currentAnalysis);
+
+  // Show dashboard
+  dashboard.style.display = 'block';
+  emptyState.style.display = 'none';
+  exportBtn.disabled = false;
+  clearBtn.disabled = false;
+
+  // Save to history
+  saveToHistory(currentAnalysis);
+
+  // Scroll to dashboard
+  dashboard.scrollIntoView({ behavior: 'smooth' });
+});
+
+// ============================================================
+// PDF EXPORT
+// ============================================================
+exportBtn.addEventListener('click', async () => {
+  if (!currentAnalysis) return;
+  exportBtn.disabled = true;
+  exportBtn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;"></span> Generando...';
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('l', 'mm', 'a4'); // landscape
+    const tabs = ['summary', 'detail', 'actions', 'charts'];
+    const tabNames = ['Resumen Ejecutivo', 'Detalle por Campaña', 'Acciones y Estrategia', 'Gráficas'];
+
+    for (let i = 0; i < tabs.length; i++) {
+      // Activate tab temporarily
+      document.querySelectorAll('.tab-content').forEach(tc => tc.style.display = 'none');
+      const tabEl = $('tab-' + tabs[i]);
+      tabEl.style.display = 'block';
+
+      // Expand all collapsed cards for detail tab
+      if (tabs[i] === 'detail') {
+        tabEl.querySelectorAll('.card-body.collapsed').forEach(cb => cb.classList.remove('collapsed'));
+      }
+
+      await new Promise(r => setTimeout(r, 500)); // wait for charts to render
+
+      const canvas = await html2canvas(tabEl, {
+        backgroundColor: '#FFFFFF',
+        scale: 1.5,
+        useCORS: true,
+        logging: false
+      });
+
+      if (i > 0) pdf.addPage();
+
+      // Header
+      pdf.setFillColor(248, 250, 252);
+      pdf.rect(0, 0, 297, 210, 'F');
+      pdf.setTextColor(37, 99, 235);
+      pdf.setFontSize(8);
+      pdf.text(`Meta Ads Diagnostic — ${currentAnalysis.casinoName} — ${tabNames[i]}`, 10, 8);
+      pdf.setTextColor(71, 85, 105);
+      pdf.text(`${currentAnalysis.dateRange.start} al ${currentAnalysis.dateRange.end}`, 250, 8);
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.9);
+      const imgW = 277;
+      const imgH = (canvas.height / canvas.width) * imgW;
+      pdf.addImage(imgData, 'JPEG', 10, 14, imgW, Math.min(imgH, 190));
+    }
+
+    // Restore tab state
+    document.querySelectorAll('.tab-content').forEach(tc => tc.style.display = '');
+    document.querySelector('.tab.active').click();
+
+    // Sequential export counter (persists per session, resets on page reload)
+    if (!window._exportCount) window._exportCount = {};
+    const casinoKey = currentAnalysis.casino;
+    window._exportCount[casinoKey] = (window._exportCount[casinoKey] || 0) + 1;
+    const seq = String(window._exportCount[casinoKey]).padStart(2, '0');
+    const fileName = `diagnostico-${currentAnalysis.casino}-${currentAnalysis.dateRange.end || new Date().toISOString().slice(0, 10)}_v${seq}.pdf`;
+
+    // Try to save to output/{casino}/ using File System Access API (Chrome)
+    // Falls back to regular download if not supported or denied
+    const pdfBlob = pdf.output('blob');
+    let saved = false;
+
+    if (window.showDirectoryPicker) {
+      try {
+        // Ask user to select the output folder (first time only — browser remembers)
+        if (!window._outputDirHandle) {
+          const hint = `Selecciona la carpeta "output" del proyecto para guardar en output/${currentAnalysis.casino}/`;
+          alert(hint);
+          window._outputDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+        }
+
+        // Create casino subfolder if needed
+        const casinoDir = await window._outputDirHandle.getDirectoryHandle(currentAnalysis.casino, { create: true });
+        const fileHandle = await casinoDir.getFileHandle(fileName, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(pdfBlob);
+        await writable.close();
+        saved = true;
+
+        // Show success with path info
+        const successMsg = document.createElement('div');
+        successMsg.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#059669;color:#fff;padding:14px 22px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.15);';
+        successMsg.textContent = `✓ PDF guardado en output/${currentAnalysis.casino}/${fileName}`;
+        document.body.appendChild(successMsg);
+        setTimeout(() => successMsg.remove(), 4000);
+      } catch (fsErr) {
+        // User cancelled or API not available — fall back to download
+        console.log('File System Access cancelled, falling back to download:', fsErr.message);
+      }
+    }
+
+    if (!saved) {
+      pdf.save(fileName);
+    }
+  } catch (err) {
+    console.error('Error exporting PDF:', err);
+    alert('Error al exportar PDF. Revisa la consola del navegador.');
+  }
+
+  exportBtn.disabled = false;
+  exportBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Exportar PDF';
+});
+
+// ============================================================
+// CLEAR ALL
+// ============================================================
+clearBtn.addEventListener('click', () => {
+  // Reset uploaded files
+  uploadedFiles = [];
+  filesList.innerHTML = '';
+
+  // Reset analysis
+  currentAnalysis = null;
+
+  // Destroy chart instances
+  chartInstances.forEach(c => { try { c.destroy(); } catch(e) {} });
+  chartInstances = [];
+
+  // Hide dashboard, show empty state
+  dashboard.style.display = 'none';
+  emptyState.style.display = '';
+
+  // Clear dashboard content
+  ['tab-summary', 'tab-detail', 'tab-actions', 'tab-charts'].forEach(id => {
+    const el = $(id);
+    if (el) el.innerHTML = '';
+  });
+
+  // Reset casino selector
+  casinoSelect.value = '';
+  currencyBadge.textContent = '---';
+
+  // Disable buttons
+  analyzeBtn.disabled = true;
+  exportBtn.disabled = true;
+  clearBtn.disabled = true;
+
+  // Reset tabs to first
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', i === 0);
+  });
+
+  // Reset file input
+  fileInput.value = '';
+});
+
+// ============================================================
+// INDEXEDDB HISTORY
+// ============================================================
+const DB_NAME = 'MetaAdsDiagnostic';
+const DB_VERSION = 1;
+const STORE_NAME = 'analyses';
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+        store.createIndex('casino', 'casino', { unique: false });
+        store.createIndex('timestamp', 'timestamp', { unique: false });
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function saveToHistory(analysis) {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    store.add({
+      casino: analysis.casino,
+      casinoName: analysis.casinoName,
+      dateRange: analysis.dateRange,
+      timestamp: analysis.timestamp,
+      data: analysis
+    });
+  } catch (err) {
+    console.error('Error saving to history:', err);
+  }
+}
+
+async function loadHistory() {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.getAll();
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result.reverse());
+      request.onerror = () => reject(request.error);
+    });
+  } catch (err) {
+    console.error('Error loading history:', err);
+    return [];
+  }
+}
+
+async function deleteHistoryItem(id) {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).delete(id);
+    renderHistory();
+  } catch (err) {
+    console.error('Error deleting history item:', err);
+  }
+}
+
+async function loadHistoryItem(id) {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.get(id);
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  } catch (err) {
+    console.error('Error loading history item:', err);
+    return null;
+  }
+}
+
+async function renderHistory() {
+  const items = await loadHistory();
+  const list = $('historyList');
+
+  if (items.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t3);font-size:13px;">No hay análisis guardados aún.</div>';
+    return;
+  }
+
+  list.innerHTML = items.map(item => {
+    const active = item.data.campaigns.filter(c => c.delivery.toLowerCase().includes('activ'));
+    const weightedRoas = active.reduce((s, c) => s + c.spend, 0) > 0
+      ? active.reduce((s, c) => s + c.roas * c.spend, 0) / active.reduce((s, c) => s + c.spend, 0)
+      : 0;
+    const sem = getSemaphore(weightedRoas);
+
+    return `<div class="history-item" onclick="restoreHistory(${item.id})">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div class="history-casino">${item.casinoName}</div>
+          <div class="history-date">${item.dateRange.start} — ${item.dateRange.end}</div>
+          <div class="history-roas">
+            <span class="semaphore"><span class="semaphore-dot ${sem}"></span></span>
+            ROAS ponderado: ${weightedRoas.toFixed(2)}x | ${active.length} campañas
+          </div>
+        </div>
+        <span style="cursor:pointer;color:var(--t3);font-size:16px;" onclick="event.stopPropagation();deleteHistoryItem(${item.id})">&times;</span>
+      </div>
+      <div style="font-size:10px;color:var(--t3);margin-top:6px;">${new Date(item.timestamp).toLocaleDateString('es-MX', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })}</div>
+    </div>`;
+  }).join('');
+}
+
+async function restoreHistory(id) {
+  const item = await loadHistoryItem(id);
+  if (!item) return;
+
+  currentAnalysis = item.data;
+  casinoSelect.value = currentAnalysis.casino;
+  currencyBadge.textContent = CASINOS[currentAnalysis.casino]?.currency || '---';
+
+  renderSummary(currentAnalysis);
+  renderDetail(currentAnalysis);
+  renderActions(currentAnalysis);
+  renderCharts(currentAnalysis);
+
+  dashboard.style.display = 'block';
+  emptyState.style.display = 'none';
+  exportBtn.disabled = false;
+  clearBtn.disabled = false;
+
+  // Close history panel
+  historyPanel.classList.remove('open');
+  historyOverlay.classList.remove('open');
+
+  dashboard.scrollIntoView({ behavior: 'smooth' });
+}
+
+// Clear all
+clearBtn.addEventListener('click', () => {
+  uploadedFiles.length = 0;
+  currentAnalysis = null;
+  chartInstances.forEach(c => c.destroy());
+  chartInstances.length = 0;
+  filesList.innerHTML = '';
+  dashboard.style.display = 'none';
+  emptyState.style.display = 'block';
+  exportBtn.disabled = true;
+  clearBtn.disabled = true;
+  analyzeBtn.disabled = true;
+  casinoSelect.value = '';
+  currencyBadge.textContent = '---';
+  fileInput.value = '';
+  $('tab-summary').innerHTML = '';
+  $('tab-detail').innerHTML = '';
+  $('tab-actions').innerHTML = '';
+  $('tab-charts').innerHTML = '';
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+  document.querySelector('.tab[data-tab="summary"]').classList.add('active');
+  $('tab-summary').classList.add('active');
+});
+
+// History panel toggle
+historyBtn.addEventListener('click', () => {
+  historyPanel.classList.add('open');
+  historyOverlay.classList.add('open');
+  renderHistory();
+});
+closeHistory.addEventListener('click', () => {
+  historyPanel.classList.remove('open');
+  historyOverlay.classList.remove('open');
+});
+historyOverlay.addEventListener('click', () => {
+  historyPanel.classList.remove('open');
+  historyOverlay.classList.remove('open');
+});
+</script>
+</body>
+</html>
