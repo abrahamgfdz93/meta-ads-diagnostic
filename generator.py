@@ -7,6 +7,7 @@ import json
 import base64
 import os
 import sys
+import webbrowser
 from pathlib import Path
 from io import StringIO
 
@@ -847,7 +848,7 @@ def run_parse(casino_id, period):
     print(json.dumps(output, indent=2, ensure_ascii=False))
 
 
-def run_generate(casino_id, period, analysis_path):
+def run_generate(casino_id, period, analysis_path, open_after=False):
     casino_info = CASINOS[casino_id]
     symbol = casino_info["symbol"]
 
@@ -914,7 +915,15 @@ def run_generate(casino_id, period, analysis_path):
     output_path = output_dir / f"diagnostico-{casino_id}_{period}_{next_num:02d}.html"
     output_path.write_text(html, encoding="utf-8")
 
-    print(json.dumps({"status": "ok", "path": str(output_path)}, ensure_ascii=False))
+    opened = False
+    if open_after:
+        try:
+            webbrowser.open(output_path.absolute().as_uri())
+            opened = True
+        except Exception:
+            opened = False
+
+    print(json.dumps({"status": "ok", "path": str(output_path), "opened": opened}, ensure_ascii=False))
 
 
 def main():
@@ -929,14 +938,16 @@ def main():
     p_gen.add_argument("casino", choices=CASINOS.keys())
     p_gen.add_argument("period", help="Period folder name")
     p_gen.add_argument("--analysis", required=True, help="Path to LLM analysis JSON")
+    p_gen.add_argument("--open", action="store_true", help="Open HTML in default browser after generation")
 
     args = parser.parse_args()
 
     if args.mode == "parse":
         run_parse(args.casino, args.period)
     elif args.mode == "generate":
-        run_generate(args.casino, args.period, args.analysis)
+        run_generate(args.casino, args.period, args.analysis, open_after=args.open)
 
 
 if __name__ == "__main__":
     main()
+
