@@ -4,6 +4,20 @@
 
 Sistema que analiza CSV exportados de Meta Ads y genera un dashboard HTML con diagnóstico completo por casino. Usa `generator.py` para el trabajo mecánico (parseo, KPIs, semáforos, HTML) y Claude IA para el análisis cualitativo (diagnósticos, causa raíz, estrategia). Incluye semáforos de 4 niveles, análisis de raíz causa por anuncio, estrategia por campaña, y gráficas comparativas.
 
+## Fuente canónica y repo público (2026-06-30)
+
+**Repo público:** https://github.com/abrahamgfdz93/meta-ads-diagnostic — es ahora la **fuente canónica** de la herramienta. Copia local del repo en `projects/github-repos/meta-ads-diagnostic/` (se publica SIN datos: `analyser/`, `output/`, CSV y XLSX están en `.gitignore`).
+
+**Regla anti-desincronización:** `generator.py` y `template.html` deben ser byte-idénticos entre este proyecto local, la copia del repo y lo embebido en `COMPARTIR-v2/`. Si tocas uno, actualiza los tres. Cuando publiques cambios, hazlo desde `projects/github-repos/meta-ads-diagnostic/` con `/github-publish` (o `git push`).
+
+**Lección aprendida (por qué existe esta regla):** el flag `--open` de `generator.py` (cross-platform con `webbrowser`) se agregó en 2026-04-20 solo a la copia embebida en `COMPARTIR-v2`, pero NO al `generator.py` de este proyecto ni a la skill v1 de `COMPARTIR/`. Quedaron 3 versiones divergiendo. Se reconcilió el 2026-06-30: el `generator.py` local se actualizó a la versión con `--open` (respaldo previo en `generator.py.bak-pre-open`) y el repo quedó como fuente única.
+
+**Formas de instalar para el equipo (ambas en el repo):**
+1. `git clone` + `./install.sh` — el instalador genera la skill apuntando dinámicamente a la carpeta donde se clonó (marcador `__PROJECT_DIR__` en `skill/meta-ads-diagnostic.md`) y usa `--open`. Portable Mac/Windows/Linux.
+2. `COMPARTIR-v2/` — copiar-pegar los 4 `.md` en Claude Code (para equipo no técnico). Instala en `~/meta-ads-diagnostic/`.
+
+⚠️ La skill v1 de `COMPARTIR/` tiene rutas hardcodeadas al Desktop de Abraham y usa el comando `open` de solo-Mac — **no usar**; existe solo por histórico. La versión portable vive en `skill/meta-ads-diagnostic.md` (repo).
+
 ## Dos formas de usar
 
 ### 1. Skill con IA (recomendado) — `/meta-ads-diagnostic`
